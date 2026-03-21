@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>产业避险参谋 - 实时版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 22px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header h1::before {
+            content: "🛡️";
+            font-size: 28px;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .industries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .industry-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+
+        .refresh-btn.loading {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .timestamp {
+            color: #a0aec0;
+            font-size: 11px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timestamp::before {
+            content: "🕐";
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-indicator.online {
+            background: #48bb78;
+        }
+
+        .status-indicator.offline {
+            background: #f56565;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .news-item {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .news-item:hover {
+            background: #f7fafc;
+            margin: 0 -10px;
+            padding: 12px 10px;
+            border-radius: 8px;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-title {
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .news-title .expand-icon {
+            font-size: 12px;
+            color: #a0aec0;
+            transition: transform 0.3s;
+        }
+
+        .news-item.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 11px;
+            color: #a0aec0;
+            margin-bottom: 6px;
+        }
+
+        .news-snippet {
+            color: #718096;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .news-detail {
+            display: none;
+            margin-top: 10px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .news-item.expanded .news-detail {
+            display: block;
+        }
+
+        .news-type {
+            display: inline-block;
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+
+        .price-card {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .price-card .material-name {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .price-card .price-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .price-card .price-change {
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .price-change.up {
+            color: #e53e3e;
+        }
+
+        .price-change.down {
+            color: #38a169;
+        }
+
+        .error-message {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .auto-refresh-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #718096;
+            margin-top: 10px;
+        }
+
+        .auto-refresh-toggle input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #4a5568;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result-content {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #2d3748;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>产业避险参谋</h1>
+            <div class="subtitle">
+                针对6大行业提供战争实时动态的成本预警和采购建议
+            </div>
+            <div class="industries">
+                <span class="industry-tag">🏭 PCB</span>
+                <span class="industry-tag">🛥️ 游艇</span>
+                <span class="industry-tag">💊 生物医药</span>
+                <span class="industry-tag">🔋 新型储能</span>
+                <span class="industry-tag">🖨️ 打印耗材</span>
+                <span class="industry-tag">📦 跨境电商</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>
+                <span>📰 实时市场动态</span>
+                <button class="refresh-btn" id="refreshNewsBtn" onclick="refreshNews()">
+                    <span>🔄</span>
+                    <span>刷新</span>
+                </button>
+            </h2>
+            <div class="timestamp" id="newsTimestamp">
+                <span class="status-indicator offline" id="statusIndicator"></span>
+                <span>最后更新：--</span>
+            </div>
+            
+            <div id="newsContainer">
+                <div style="text-align: center; padding: 30px; color: #a0aec0;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 10px;">正在加载数据...</p>
+                </div>
+            </div>
+
+            <div class="auto-refresh-toggle">
+                <input type="checkbox" id="autoRefreshCheckbox" onchange="toggleAutoRefresh()">
+                <label for="autoRefreshCheckbox">自动刷新（每5分钟）</label>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>
+                <span>💰 关键原材料价格</span>
+                <button class="refresh-btn" id="refreshPriceBtn" onclick="refreshPrices()">
+                    <span>🔄</span>
+                    <span>刷新</span>
+                </button>
+            </h2>
+            <div class="timestamp" id="priceTimestamp">最后更新：--</div>
+            
+            <div id="priceContainer">
+                <div style="text-align: center; padding: 30px; color: #a0aec0;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 10px;">正在加载价格...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 行业风险查询</h2>
+            <div class="input-group">
+                <label>选择行业</label>
+                <select id="industrySelect">
+                    <option value="">请选择行业</option>
+                    <option value="PCB">PCB - 印刷电路板</option>
+                    <option value="游艇">游艇 - 游艇制造</option>
+                    <option value="生物医药">生物医药 - 生物医药</option>
+                    <option value="新型储能">新型储能 - 新型储能</option>
+                    <option value="打印耗材">打印耗材 - 打印耗材</option>
+                    <option value="跨境电商">跨境电商 - 跨境电商</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>详细需求（可选）</label>
+                <textarea id="queryDetail" placeholder="输入您的具体需求..."></textarea>
+            </div>
+            <button class="btn" id="analyzeBtn" onclick="analyzeIndustry()">开始分析</button>
+            
+            <div id="analysisResult" style="display: none; margin-top: 15px;">
+                <div class="result-content" id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API 基础路径
+        const API_BASE = window.location.origin + '/api';
+        
+        // 自动刷新定时器
+        let autoRefreshTimer = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshNews();
+            refreshPrices();
+        });
+
+        // 刷新新闻
+        async function refreshNews() {
+            const btn = document.getElementById('refreshNewsBtn');
+            const container = document.getElementById('newsContainer');
+            const timestamp = document.getElementById('newsTimestamp');
+            const indicator = document.getElementById('statusIndicator');
+            
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/news/realtime`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    renderNews(data.data);
+                    timestamp.innerHTML = `
+                        <span class="status-indicator online"></span>
+                        <span>最后更新：${formatTime(data.timestamp)}</span>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="error-message">
+                            暂无新闻数据
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Failed to fetch news:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        ❌ 数据加载失败：${error.message}<br>
+                        <small>请检查网络连接或稍后重试</small>
+                    </div>
+                `;
+                indicator.className = 'status-indicator offline';
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // 渲染新闻列表
+        function renderNews(newsList) {
+            const container = document.getElementById('newsContainer');
+            
+            if (!newsList || newsList.length === 0) {
+                container.innerHTML = '<p style="color: #a0aec0; text-align: center; padding: 20px;">暂无新闻数据</p>';
+                return;
+            }
+            
+            container.innerHTML = newsList.map((news, index) => `
+                <div class="news-item" onclick="toggleNews(this)">
+                    <div class="news-title">
+                        <span>${news.title || '市场动态'}</span>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="news-meta">
+                        <span class="news-type">${news.type || '动态'}</span>
+                        <span>📍 ${news.source || '系统'}</span>
+                        <span>🕐 ${news.time || '刚刚'}</span>
+                    </div>
+                    <div class="news-snippet">${news.snippet || news.content?.substring(0, 100) || ''}</div>
+                    <div class="news-detail">
+                        <div class="news-detail-content">
+                            ${news.content || '暂无详细内容'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 刷新价格
+        async function refreshPrices() {
+            const btn = document.getElementById('refreshPriceBtn');
+            const container = document.getElementById('priceContainer');
+            const timestamp = document.getElementById('priceTimestamp');
+            
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/prices/all`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderPrices(data.data);
+                    timestamp.textContent = `最后更新：${formatTime(data.timestamp)}`;
+                } else {
+                    container.innerHTML = `
+                        <div class="error-message">
+                            价格数据加载失败
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Failed to fetch prices:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        ❌ 价格数据加载失败：${error.message}
+                    </div>
+                `;
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // 渲染价格卡片
+        function renderPrices(priceData) {
+            const container = document.getElementById('priceContainer');
+            
+            const materialNames = {
+                'copper': '电解铜',
+                'aluminum': '电解铝',
+                'oil': '原油',
+                'palladium': '钯金'
+            };
+            
+            const cards = Object.entries(priceData).map(([material, data]) => {
+                const name = materialNames[material] || material;
+                const price = data.price || '--';
+                const change = data.change || 0;
+                const changeClass = change >= 0 ? 'up' : 'down';
+                const changeSymbol = change >= 0 ? '↑' : '↓';
+                
+                return `
+                    <div class="price-card">
+                        <div class="material-name">${name}</div>
+                        <div class="price-value">${price}</div>
+                        ${change ? `<div class="price-change ${changeClass}">${changeSymbol} ${Math.abs(change)}%</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = `<div class="price-grid">${cards}</div>`;
+        }
+
+        // 行业分析
+        async function analyzeIndustry() {
+            const industry = document.getElementById('industrySelect').value;
+            const detail = document.getElementById('queryDetail').value;
+            const btn = document.getElementById('analyzeBtn');
+            const resultDiv = document.getElementById('analysisResult');
+            const resultContent = document.getElementById('resultContent');
+            
+            if (!industry) {
+                alert('请选择行业');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = '分析中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/analyze/industry`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        industry: industry,
+                        detail: detail
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultContent.textContent = JSON.stringify(data.data, null, 2);
+                } else {
+                    resultContent.textContent = `分析失败：${data.error || '未知错误'}`;
+                }
+                
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                resultContent.textContent = `分析失败：${error.message}`;
+                resultDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '开始分析';
+            }
+        }
+
+        // 切换新闻展开/收起
+        function toggleNews(element) {
+            element.classList.toggle('expanded');
+        }
+
+        // 切换自动刷新
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefreshCheckbox');
+            
+            if (checkbox.checked) {
+                // 开启自动刷新（每5分钟）
+                autoRefreshTimer = setInterval(() => {
+                    refreshNews();
+                    refreshPrices();
+                }, 5 * 60 * 1000);
+                
+                console.log('Auto refresh enabled: every 5 minutes');
+            } else {
+                // 关闭自动刷新
+                if (autoRefreshTimer) {
+                    clearInterval(autoRefreshTimer);
+                    autoRefreshTimer = null;
+                }
+                
+                console.log('Auto refresh disabled');
+            }
+        }
+
+        // 格式化时间
+        function formatTime(timestamp) {
+            if (!timestamp) return '--';
+            
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            // 如果是今天
+            if (diff < 24 * 60 * 60 * 1000) {
+                return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            return date.toLocaleString('zh-CN', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+</body>
+</html>
