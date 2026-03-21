@@ -1,0 +1,427 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-01-15",
+  "industries": {
+    "PCB": {
+      "name": "印刷电路板",
+      "description": "电子产品的核心部件，广泛应用于手机、电脑、汽车电子等领域",
+      "key_materials": [
+        {
+          "name": "电解铜箔",
+          "weight": "35%",
+          "unit": "元/张",
+          "base_price": 180,
+          "price_sensitive": true,
+          "suppliers": ["中国台湾", "日本", "韩国", "中国大陆"],
+          "supply_risk": "中高",
+          "notes": "受LME铜价直接影响，价格波动较大"
+        },
+        {
+          "name": "覆铜板(CCL)",
+          "weight": "40%",
+          "unit": "元/张",
+          "base_price": 220,
+          "price_sensitive": true,
+          "suppliers": ["中国大陆", "中国台湾", "日本"],
+          "supply_risk": "中",
+          "notes": "由铜箔和树脂复合而成，受铜价和树脂价格双重影响"
+        },
+        {
+          "name": "钯/金电镀药水",
+          "weight": "15%",
+          "unit": "%成本",
+          "base_price": 100,
+          "price_sensitive": true,
+          "suppliers": ["德国", "日本", "美国"],
+          "supply_risk": "高",
+          "notes": "贵金属原料，受国际钯金、金价影响大"
+        }
+      ],
+      "key_indicators": [
+        {
+          "name": "LME铜价",
+          "description": "伦敦金属交易所铜期货价格",
+          "impact": "直接决定电解铜箔成本",
+          "watch_frequency": "每日"
+        },
+        {
+          "name": "钯金现货",
+          "description": "国际钯金现货价格",
+          "impact": "影响电镀药水成本",
+          "watch_frequency": "每日"
+        }
+      ],
+      "war_sensitivity": {
+        "level": "高",
+        "reason": "依赖进口原材料，供应链国际化程度高",
+        "potential_impacts": [
+          "海运成本上涨",
+          "原材料进口延误",
+          "贵金属价格波动"
+        ]
+      }
+    },
+    "游艇": {
+      "name": "游艇制造",
+      "description": "高端休闲船只制造，材料成本占比高",
+      "key_materials": [
+        {
+          "name": "不饱和聚酯树脂",
+          "weight": "30%",
+          "unit": "元/吨",
+          "base_price": 9500,
+          "price_sensitive": true,
+          "suppliers": ["中国大陆", "韩国", "中东"],
+          "supply_risk": "高",
+          "notes": "石油化工下游产品，受原油价格直接影响"
+        },
+        {
+          "name": "乙烯基树脂",
+          "weight": "15%",
+          "unit": "元/吨",
+          "base_price": 12500,
+          "price_sensitive": true,
+          "suppliers": ["美国", "欧洲", "中国"],
+          "supply_risk": "中高",
+          "notes": "高性能树脂，用于船体关键部位"
+        },
+        {
+          "name": "胶衣",
+          "weight": "10%",
+          "unit": "元/吨",
+          "base_price": 15000,
+          "price_sensitive": false,
+          "suppliers": ["美国", "欧洲", "中国"],
+          "supply_risk": "中",
+          "notes": "表面保护层，影响游艇外观和耐久性"
+        },
+        {
+          "name": "进口发动机",
+          "weight": "35%",
+          "unit": "万元/台",
+          "base_price": 25,
+          "price_sensitive": false,
+          "suppliers": ["Volvo(瑞典)", "Mercury(美国)", "Yanmar(日本)"],
+          "supply_risk": "极高",
+          "notes": "核心部件，依赖欧美日进口，海运周期长"
+        }
+      ],
+      "key_indicators": [
+        {
+          "name": "布伦特原油",
+          "description": "国际原油基准价格",
+          "impact": "直接决定树脂成本",
+          "watch_frequency": "每日"
+        },
+        {
+          "name": "海运费指数",
+          "description": "国际海运费价格",
+          "impact": "影响进口发动机物流成本",
+          "watch_frequency": "每周"
+        }
+      ],
+      "war_sensitivity": {
+        "level": "极高",
+        "reason": "高度依赖石油化工产品和进口发动机",
+        "potential_impacts": [
+          "原油价格暴涨",
+          "进口发动机物流延误",
+          "树脂供应链中断"
+        ]
+      }
+    },
+    "生物医药": {
+      "name": "生物医药",
+      "description": "药品研发和生产，对原材料纯度和稳定性要求极高",
+      "key_materials": [
+        {
+          "name": "API原料药",
+          "weight": "40%",
+          "unit": "元/kg",
+          "base_price": 850,
+          "price_sensitive": true,
+          "suppliers": ["中国", "印度", "以色列"],
+          "supply_risk": "高",
+          "notes": "核心活性成分，以色列是重要供应地"
+        },
+        {
+          "name": "异丙醇",
+          "weight": "15%",
+          "unit": "元/L",
+          "base_price": 12,
+          "price_sensitive": false,
+          "suppliers": ["中国", "韩国", "中东"],
+          "supply_risk": "中",
+          "notes": "常用有机溶剂"
+        },
+        {
+          "name": "乙腈溶剂",
+          "weight": "10%",
+          "unit": "元/L",
+          "base_price": 45,
+          "price_sensitive": false,
+          "suppliers": ["中国", "美国", "欧洲"],
+          "supply_risk": "中",
+          "notes": "高效液相色谱用溶剂"
+        },
+        {
+          "name": "液氦",
+          "weight": "20%",
+          "unit": "元/L",
+          "base_price": 180,
+          "price_sensitive": true,
+          "suppliers": ["卡塔尔", "美国", "俄罗斯"],
+          "supply_risk": "极高",
+          "notes": "MRI等设备冷却剂，依赖中东供应"
+        }
+      ],
+      "key_indicators": [
+        {
+          "name": "中东空运溢价",
+          "description": "中东地区空运费用溢价",
+          "impact": "影响液氦等特殊物资运输",
+          "watch_frequency": "每周"
+        },
+        {
+          "name": "卡塔尔航道",
+          "description": "卡塔尔航运通道状况",
+          "impact": "影响液氦供应稳定性",
+          "watch_frequency": "实时"
+        }
+      ],
+      "war_sensitivity": {
+        "level": "极高",
+        "reason": "依赖中东地区API原料药和液氦供应",
+        "potential_impacts": [
+          "API原料药供应中断",
+          "液氦运输通道受阻",
+          "空运成本激增"
+        ]
+      }
+    },
+    "新型储能": {
+      "name": "新型储能",
+      "description": "锂电池、储能系统等新能源领域",
+      "key_materials": [
+        {
+          "name": "PVDF粘结剂",
+          "weight": "25%",
+          "unit": "元/kg",
+          "base_price": 320,
+          "price_sensitive": true,
+          "suppliers": ["法国", "日本", "中国"],
+          "supply_risk": "高",
+          "notes": "锂电池关键材料，依赖进口"
+        },
+        {
+          "name": "电解液溶剂(DMC/EMC)",
+          "weight": "35%",
+          "unit": "元/kg",
+          "base_price": 18,
+          "price_sensitive": true,
+          "suppliers": ["中国", "韩国", "日本"],
+          "supply_risk": "中",
+          "notes": "电解液主要成分，受石化产业链影响"
+        },
+        {
+          "name": "铝箔",
+          "weight": "20%",
+          "unit": "元/kg",
+          "base_price": 25,
+          "price_sensitive": true,
+          "suppliers": ["中国", "俄罗斯", "澳大利亚"],
+          "supply_risk": "中",
+          "notes": "电池集流体材料"
+        }
+      ],
+      "key_indicators": [
+        {
+          "name": "沪铝主力",
+          "description": "上海期货交易所铝期货价格",
+          "impact": "直接影响铝箔成本",
+          "watch_frequency": "每日"
+        },
+        {
+          "name": "电力成本预期",
+          "description": "工业用电价格走势",
+          "impact": "影响电解铝成本",
+          "watch_frequency": "每月"
+        }
+      ],
+      "war_sensitivity": {
+        "level": "高",
+        "reason": "依赖进口PVDF和有色金属",
+        "potential_impacts": [
+          "PVDF进口受阻",
+          "铝价波动",
+          "电力成本上涨"
+        ]
+      }
+    },
+    "打印耗材": {
+      "name": "打印耗材",
+      "description": "打印机耗材生产，包括墨粉、硒鼓等",
+      "key_materials": [
+        {
+          "name": "聚合碳粉",
+          "weight": "35%",
+          "unit": "元/kg",
+          "base_price": 85,
+          "price_sensitive": true,
+          "suppliers": ["日本", "韩国", "中国"],
+          "supply_risk": "中",
+          "notes": "核心材料，技术门槛较高"
+        },
+        {
+          "name": "ABS/HIPS塑料粒子",
+          "weight": "30%",
+          "unit": "元/kg",
+          "base_price": 12,
+          "price_sensitive": true,
+          "suppliers": ["中国", "韩国", "中东"],
+          "supply_risk": "中",
+          "notes": "外壳材料，受原油价格影响"
+        },
+        {
+          "name": "显影滚轴",
+          "weight": "20%",
+          "unit": "元/个",
+          "base_price": 45,
+          "price_sensitive": false,
+          "suppliers": ["日本", "中国"],
+          "supply_risk": "低",
+          "notes": "精密部件，依赖日本技术"
+        }
+      ],
+      "key_indicators": [
+        {
+          "name": "远东塑料价格指数",
+          "description": "亚洲地区塑料原料价格",
+          "impact": "直接影响塑料粒子成本",
+          "watch_frequency": "每周"
+        }
+      ],
+      "war_sensitivity": {
+        "level": "中",
+        "reason": "部分原材料依赖石化产业链",
+        "potential_impacts": [
+          "塑料粒子价格上涨",
+          "进口精密部件延误"
+        ]
+      }
+    },
+    "跨境电商": {
+      "name": "跨境电商",
+      "description": "跨境商品销售，物流成本占比高",
+      "key_materials": [
+        {
+          "name": "瓦楞纸箱",
+          "weight": "25%",
+          "unit": "元/个",
+          "base_price": 8,
+          "price_sensitive": false,
+          "suppliers": ["中国", "东南亚"],
+          "supply_risk": "低",
+          "notes": "包装材料，国内供应充足"
+        },
+        {
+          "name": "航空燃油附加费",
+          "weight": "35%",
+          "unit": "元/kg",
+          "base_price": 15,
+          "price_sensitive": true,
+          "suppliers": ["航空公司"],
+          "supply_risk": "高",
+          "notes": "随油价波动，难以预测"
+        },
+        {
+          "name": "集装箱运价",
+          "weight": "30%",
+          "unit": "美元/柜",
+          "base_price": 2500,
+          "price_sensitive": true,
+          "suppliers": ["船公司"],
+          "supply_risk": "极高",
+          "notes": "海运核心成本，受国际局势影响大"
+        }
+      ],
+      "key_indicators": [
+        {
+          "name": "SCFI运费指数",
+          "description": "上海出口集装箱运价指数",
+          "impact": "直接反映海运费走势",
+          "watch_frequency": "每周"
+        },
+        {
+          "name": "好望角绕行指数",
+          "description": "因中东局势导致的绕行成本",
+          "impact": "影响欧洲航线运费",
+          "watch_frequency": "实时"
+        }
+      ],
+      "war_sensitivity": {
+        "level": "极高",
+        "reason": "高度依赖国际物流通道",
+        "potential_impacts": [
+          "海运费暴涨",
+          "航线延误或中断",
+          "航空运力紧张"
+        ]
+      }
+    }
+  },
+  "war_scenarios": {
+    "iran_conflict": {
+      "name": "伊朗局势",
+      "affected_regions": ["霍尔木兹海峡", "波斯湾", "中东"],
+      "affected_industries": ["游艇", "生物医药", "跨境电商", "PCB"],
+      "key_impacts": [
+        "原油价格波动",
+        "海运通道受阻",
+        "空运成本上涨",
+        "中东地区原材料供应中断"
+      ]
+    },
+    "red_sea_crisis": {
+      "name": "红海危机",
+      "affected_regions": ["红海", "苏伊士运河"],
+      "affected_industries": ["跨境电商", "生物医药", "打印耗材"],
+      "key_impacts": [
+        "欧洲航线绕行好望角",
+        "海运费上涨50%-100%",
+        "物流延误2-3周"
+      ]
+    }
+  },
+  "decision_framework": {
+    "red_alert": {
+      "threshold": "原材料价格涨幅 ≥10%",
+      "action_time": "立即（当日）",
+      "recommendations": [
+        "立即锁定订单",
+        "现货库存优先保障重点客户",
+        "报价单有效期缩短至24小时",
+        "启动备用供应商"
+      ]
+    },
+    "yellow_warning": {
+      "threshold": "原材料价格涨幅 5%-10%",
+      "action_time": "3天内",
+      "recommendations": [
+        "尽快完成近期订单下单",
+        "与供应商保持每日沟通",
+        "准备备用供应商方案",
+        "报价单有效期3-5天"
+      ]
+    },
+    "green_notice": {
+      "threshold": "原材料价格涨幅 2%-5%",
+      "action_time": "正常周期",
+      "recommendations": [
+        "保持正常采购节奏",
+        "定期关注价格走势",
+        "维持合理安全库存"
+      ]
+    }
+  }
+}
