@@ -1,48 +1,98 @@
-node_modules
-dist
-.DS_Store
-*.swp
-.git/*
+# Python
 __pycache__/
-*.pyc
-.venv/*
-*.o
-*.a
-/vendor
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
-/.env
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment Variables
 .env
+.env.local
+.env.*.local
 
-# 视频文件
-*.mp4
-*.avi
-*.mov
-*.wmv
-*.flv
-*.mkv
-*.webm
-*.m4v
-*.mpeg
-*.mpg
-*.3gp
-*.f4v
-*.rmvb
-*.vob
+# API Keys
+*.pem
+*.key
+secrets.json
+config/secrets.json
 
-# 归档文件
-*.iso
-*.dmg
-*.rar
-*.zip
-*.gz
+# Logs
+logs/
+*.log
+/app/work/logs/
 
-# 文档类也默认加入
-*.pdf
-*.docx
-*.doc
-*.xlsx
-*.xls
-*.ppt
-*.pptx
-*.xlsx
-*.csv
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+node_modules/
+.npm
+.eslintcache
+
+# Temporary Files
+/tmp/
+*.tmp
+*.temp
+
+# Coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Backup Files
+*.bak
+*.backup
+
+# Generated Files
+assets/*.pdf
+assets/*.docx
+assets/*.xlsx
+
+# Keep these files
+!assets/index.html
+!assets/industry_knowledge_base.json
