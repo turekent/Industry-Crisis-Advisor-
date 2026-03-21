@@ -8,8 +8,10 @@ from typing import Any, Dict, Iterable, AsyncIterable, AsyncGenerator, Optional
 import cozeloop
 import uvicorn
 import time
+import os
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 from langgraph.graph.state import CompiledStateGraph
@@ -235,6 +237,23 @@ class GraphService:
 
 service = GraphService()
 app = FastAPI()
+
+# 挂载静态文件目录
+WORKSPACE_PATH = os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects")
+assets_path = os.path.join(WORKSPACE_PATH, "assets")
+if os.path.exists(assets_path):
+    app.mount("/static", StaticFiles(directory=assets_path), name="static")
+
+# 首页路由
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    """返回主页HTML"""
+    index_path = os.path.join(assets_path, "index.html")
+    if os.path.exists(index_path):
+        with open(index_path, 'r', encoding='utf-8') as f:
+            return HTMLResponse(content=f.read())
+    else:
+        return HTMLResponse(content="<h1>Welcome to 2026 产业避险参谋长</h1><p>Index page not found</p>")
 
 # OpenAI 兼容接口处理器
 openai_handler = OpenAIChatHandler(service)
@@ -474,6 +493,22 @@ async def health_check():
         }
     except Exception as e:
         raise HTTPException(status_code=503, detail=str(e))
+
+
+@app.get("/market_news")
+async def get_market_news():
+    """
+    获取最新的市场新闻和大宗商品价格信息
+    用于前端界面实时更新
+    """
+    from tools.market_news import get_market_news_direct
+    
+    try:
+        result = get_market_news_direct()
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error in get_market_news: {e}, traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get(path="/graph_parameter")
