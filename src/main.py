@@ -238,6 +238,14 @@ class GraphService:
 service = GraphService()
 app = FastAPI()
 
+# 导入并注册 API 路由
+try:
+    from api_routes import router as api_router
+    app.include_router(api_router)
+    logger.info("API routes registered successfully")
+except Exception as e:
+    logger.warning(f"Failed to load API routes: {str(e)}")
+
 # 挂载静态文件目录
 WORKSPACE_PATH = os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects")
 assets_path = os.path.join(WORKSPACE_PATH, "assets")
