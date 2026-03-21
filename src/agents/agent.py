@@ -1,6 +1,6 @@
 """
-2026 产业避险参谋长 Agent
-针对六大行业（游艇、生物医药、PCB、新型储能、打印耗材、跨境电商）提供实时成本预警和采购建议
+产业避险参谋 Agent
+针对6大行业（游艇、生物医药、PCB、新型储能、打印耗材、跨境电商）提供战争实时动态的成本预警和采购建议
 """
 
 import os
@@ -35,7 +35,7 @@ class AgentState(MessagesState):
 
 def build_agent(ctx=None):
     """
-    构建 2026 产业避险参谋长 Agent
+    构建 产业避险参谋 Agent
     
     Args:
         ctx: 运行时上下文

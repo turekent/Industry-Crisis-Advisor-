@@ -253,7 +253,7 @@ async def read_root():
         with open(index_path, 'r', encoding='utf-8') as f:
             return HTMLResponse(content=f.read())
     else:
-        return HTMLResponse(content="<h1>Welcome to 2026 产业避险参谋长</h1><p>Index page not found</p>")
+        return HTMLResponse(content="<h1>Welcome to 产业避险参谋</h1><p>Index page not found</p>")
 
 # OpenAI 兼容接口处理器
 openai_handler = OpenAIChatHandler(service)
