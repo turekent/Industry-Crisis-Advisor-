@@ -190,20 +190,72 @@ async def get_all_prices():
     try:
         logger.info("Fetching all material prices...")
         
-        materials = ["copper", "aluminum", "oil", "palladium"]
+        materials = {
+            "copper": "LME铜价",
+            "aluminum": "沪铝价格",
+            "oil": "布伦特原油价格",
+            "palladium": "钯金价格"
+        }
+        
         all_prices = {}
         
         # 创建搜索客户端
         ctx = new_context(method="get_all_prices")
         client = SearchClient(ctx=ctx)
         
-        for material in materials:
+        for material, name in materials.items():
             try:
-                result = await get_material_price(material)
-                all_prices[material] = result.data
+                query = f"{name} 最新价格 2026"
+                response = client.web_search(
+                    query=query,
+                    count=3,
+                    need_summary=False
+                )
+                
+                price_data = {
+                    "material": material,
+                    "name": name,
+                    "price": "--",
+                    "change": 0,
+                    "sources": []
+                }
+                
+                if response.web_items:
+                    for item in response.web_items:
+                        price_data["sources"].append({
+                            "title": item.title,
+                            "source": item.site_name,
+                            "url": item.url,
+                            "snippet": item.snippet
+                        })
+                        
+                        # 尝试从标题或摘要中提取价格
+                        import re
+                        # 匹配价格模式，如：11930美元/吨 或 112.04美元/桶
+                        price_patterns = [
+                            r'(\d+\.?\d*)\s*美元/吨',
+                            r'(\d+\.?\d*)\s*美元/桶',
+                            r'(\d+\.?\d*)\s*元/吨',
+                            r'报价(\d+\.?\d*)',
+                            r'(\d+\.?\d*)\s*美元/盎司'
+                        ]
+                        
+                        for pattern in price_patterns:
+                            match = re.search(pattern, item.title + item.snippet)
+                            if match:
+                                price_data["price"] = match.group(1)
+                                break
+                
+                all_prices[material] = price_data
+                
             except Exception as e:
                 logger.warning(f"Failed to fetch {material}: {str(e)}")
-                all_prices[material] = {"error": str(e)}
+                all_prices[material] = {
+                    "material": material,
+                    "name": name,
+                    "price": "--",
+                    "error": str(e)
+                }
         
         return PriceResponse(
             success=True,
