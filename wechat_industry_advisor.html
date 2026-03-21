@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 产业避险参谋长</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 22px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header h1::before {
+            content: "🛡️";
+            font-size: 28px;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .industries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .industry-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .news-item {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 0;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-title {
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 11px;
+            color: #a0aec0;
+            margin-bottom: 6px;
+        }
+
+        .news-snippet {
+            color: #718096;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .news-type {
+            display: inline-block;
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #4a5568;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-content {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #2d3748;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border-left: 3px solid #4299e1;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #4a5568;
+        }
+
+        .info-box strong {
+            color: #2b6cb0;
+        }
+
+        .share-tip {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #276749;
+        }
+
+        .timestamp {
+            color: #a0aec0;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>2026 产业避险参谋长</h1>
+            <div class="subtitle">
+                针对六大行业提供基于战争实时动态的成本预警和采购建议
+            </div>
+            <div class="industries">
+                <span class="industry-tag">🏭 PCB</span>
+                <span class="industry-tag">🛥️ 游艇</span>
+                <span class="industry-tag">💊 生物医药</span>
+                <span class="industry-tag">🔋 新型储能</span>
+                <span class="industry-tag">🖨️ 打印耗材</span>
+                <span class="industry-tag">📦 跨境电商</span>
+            </div>
+        </div>
+
+        <div class="share-tip">
+            💡 <strong>微信使用提示</strong>：点击右上角菜单 → 发送给朋友 / 分享到朋友圈
+        </div>
+
+        <div class="section">
+            <h2>📰 实时市场动态</h2>
+            <div class="timestamp">更新时间：2026-03-21</div>
+            <div class="news-item">
+                <div class="news-title">中东局势持续紧张，霍尔木兹海峡运输受阻</div>
+                <div class="news-meta">
+                    <span class="news-type">局势动态</span>
+                    <span>📍 路透社</span>
+                </div>
+                <div class="news-snippet">美国与伊朗冲突升级，霍尔木兹海峡航道通行受限...</div>
+            </div>
+            <div class="news-item">
+                <div class="news-title">布伦特原油突破$125，石化产业链承压</div>
+                <div class="news-meta">
+                    <span class="news-type">价格指标</span>
+                    <span>📍 彭博社</span>
+                </div>
+                <div class="news-snippet">国际油价攀升，布伦特原油期货突破每桶125美元...</div>
+            </div>
+            <div class="news-item">
+                <div class="news-title">LME铜价上涨5.9%，PCB行业成本压力增大</div>
+                <div class="news-meta">
+                    <span class="news-type">价格指标</span>
+                    <span>📍 伦敦金属交易所</span>
+                </div>
+                <div class="news-snippet">电解铜箔成本增加，PCB制造商利润承压...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 行业风险查询</h2>
+            <div class="info-box">
+                <strong>演示版说明</strong><br>
+                这是离线演示版，显示模拟数据。完整版需部署后端服务。
+            </div>
+            <div class="input-group">
+                <label>选择行业</label>
+                <select id="industrySelect">
+                    <option value="">请选择行业</option>
+                    <option value="PCB">PCB - 印刷电路板</option>
+                    <option value="游艇">游艇 - 游艇制造</option>
+                    <option value="生物医药">生物医药 - 生物医药</option>
+                    <option value="新型储能">新型储能 - 新型储能</option>
+                    <option value="打印耗材">打印耗材 - 打印耗材</option>
+                    <option value="跨境电商">跨境电商 - 跨境电商</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>详细需求（可选）</label>
+                <textarea id="queryDetail" placeholder="输入您的具体需求..."></textarea>
+            </div>
+            <button class="btn" onclick="showResult()">开始分析</button>
+        </div>
+
+        <div class="section result-section" id="resultSection">
+            <h2>📊 风险分析报告</h2>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const reports = {
+            "PCB": `## 【局势红绿灯】🟡 黄色预警
+
+## 【动态】
+近期伊朗以色列冲突持续升级，霍尔木兹海峡航道通行受限，导致全球原油供应链紧张，直接推高了PCB行业核心原材料的成本。
+
+简单说就是：
+- 国际原油涨价→电解铜箔生产成本上升→每张PCB的铜箔成本涨了10块多
+- 中东航线运费暴涨，每个集装箱额外加收3500美元战争附加费
+
+## 【精细影响】
+- **电解铜箔**：基础价格180元/张，涨幅5.9%，每张成本增加约10.54元
+- **覆铜板(CCL)**：日本巨头已宣布提价30%以上
+- **总成本影响**：预计上涨2.05%
+
+## 【真金白银建议】
+1. ⏳ 3天内锁定近期订单
+2. 🤝 与供应商保持每日沟通
+3. 📋 启动备用供应商评估
+4. 📝 报价单有效期缩短至3-5天
+
+💡 **特别提醒**：关注LME铜价走势，设置价格预警。`,
+
+            "游艇": `## 【局势红绿灯】🟡 黄色预警
+
+## 【动态】
+美国和以色列联合对伊朗发动军事打击，直接导致霍尔木兹海峡封锁，全球原油供应链陷入紧张。
+
+简单给您算笔账：
+- 布伦特原油价格上涨→游艇核心原材料树脂成本大幅上涨
+- 一艘10米游艇大概需要2吨树脂，光原材料成本就多花了2484元
+
+## 【精细影响】
+- **不饱和聚酯树脂**：涨幅5.3%，每吨成本增加约507元
+- **进口发动机**：海运成本上涨15%以上
+- **总成本影响**：预计上涨2.48%
+
+## 【真金白银建议】
+1. ⏳ 3天内锁定近期订单的原材料
+2. 🤝 与树脂供应商签订锁价协议
+3. 🚢 确认进口发动机运输方案
+4. 📝 报价单有效期缩短至3-5天
+
+💡 **特别提醒**：关注布伦特原油价格走势，设置120美元/桶预警线。`,
+
+            "生物医药": `## 【局势红绿灯】🔴 红色警报
+
+## 【动态】
+中东局势高度紧张，以色列港口和卡塔尔航道受严重影响，API原料药和液氦供应链面临中断风险。
+
+简单说就是：
+- 以色列是重要的API原料药供应地，现在供应中断
+- 液氦主要从卡塔尔进口，航道受阻导致运输延误
+- 医药企业面临原材料短缺和成本上涨双重压力
+
+## 【精细影响】
+- **API原料药**：以色列来源断供，需寻找替代供应商
+- **液氦**：运输通道受阻，价格暴涨15%
+- **总成本影响**：预计上涨5.8%
+
+## 【真金白银建议】
+1. ⚠️ 立即启动备用供应商评估
+2. 📋 优先保障核心产品生产
+3. 💰 评估是否需要调整产品价格
+4. 📦 建立多元化供应链体系
+
+💡 **特别提醒**：API原料药供应是关键，建议建立至少3个月的战略储备。`,
+
+            "新型储能": `## 【局势红绿灯】🟡 黄色预警
+
+## 【动态】
+中东局势和全球供应链紧张影响新型储能行业，PVDF粘结剂进口受阻，铝价波动明显。
+
+## 【精细影响】
+- **PVDF粘结剂**：进口依赖度高，供应紧张
+- **铝箔**：沪铝主力价格上涨，成本承压
+- **总成本影响**：预计上涨3.2%
+
+## 【真金白银建议】
+1. 🔍 密切关注PVDF供应情况
+2. 📊 跟踪沪铝价格走势
+3. 📝 与客户协商价格调整机制
+4. 🔋 提前规划产能和库存
+
+💡 **特别提醒**：PVDF供应是关键瓶颈，建议提前锁定货源。`,
+
+            "打印耗材": `## 【局势红绿灯】🟢 绿色提醒
+
+## 【动态】
+中东局势对打印耗材行业影响相对较小，主要是塑料粒子价格有所波动。
+
+## 【精细影响】
+- **ABS/HIPS塑料粒子**：受原油价格上涨影响，成本小幅上涨
+- **聚合碳粉**：供应相对稳定
+- **总成本影响**：预计上涨1.5%
+
+## 【真金白银建议】
+1. ✅ 保持正常采购节奏
+2. 📈 定期关注塑料价格走势
+3. 📦 维持合理库存水平
+
+💡 **特别提醒**：影响相对较小，保持观察即可。`,
+
+            "跨境电商": `## 【局势红绿灯】🔴 红色警报
+
+## 【动态】
+中东局势和红海危机叠加，全球海运通道严重受阻，跨境电商面临物流成本暴涨和配送延误双重挑战。
+
+## 【精细影响】
+- **集装箱运价**：SCFI指数飙升，运价上涨50%-100%
+- **航空燃油附加费**：持续上涨
+- **物流延误**：欧洲航线需绕行好望角，延长2-3周
+- **总成本影响**：预计上涨8-12%
+
+## 【真金白银建议】
+1. ⚠️ 立即调整物流策略
+2. 💰 与客户协商运费分摊
+3. 📦 提前备货，减少紧急发货
+4. 🔄 优化库存管理，平衡成本
+5. 🌍 考虑海外仓布局
+
+💡 **特别提醒**：物流成本是关键，建议密切跟踪SCFI指数。`
+        };
+
+        function showResult() {
+            const industry = document.getElementById('industrySelect').value;
+
+            if (!industry) {
+                alert('请选择要查询的行业');
+                return;
+            }
+
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+
+            resultSection.classList.add('active');
+            resultContent.textContent = reports[industry] || '暂无该行业的分析报告';
+
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
