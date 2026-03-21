@@ -1,6 +1,7 @@
 """
-成本计算工具
+成本计算工具（增强版）
 根据原材料价格波动计算各行业的成本影响
+支持混合数据源：专业API → 网络搜索 → 模拟数据
 """
 
 from langchain.tools import tool, ToolRuntime
@@ -8,6 +9,10 @@ from coze_coding_utils.runtime_ctx.context import new_context
 from typing import Dict, List, Optional
 import json
 import re
+from datetime import datetime
+
+# 导入价格API工具
+from tools.price_api import get_price_for_industry, PRICE_SOURCES
 
 
 # 各行业成本计算模型（简化版）
@@ -104,8 +109,8 @@ def calculate_cost_impact(
     
     model = COST_MODELS[industry]
     
-    # 解析搜索结果，提取价格波动信息
-    price_changes = _extract_price_changes(search_results, industry, model)
+    # 解析搜索结果，提取价格波动信息（混合方案）
+    price_changes = _extract_price_changes(search_results, industry, model, ctx)
     
     # 计算成本影响
     impact_details = []
@@ -173,72 +178,153 @@ def calculate_cost_impact(
     return json.dumps(output, ensure_ascii=False, indent=2)
 
 
-def _extract_price_changes(search_results: str, industry: str, model: Dict) -> Dict:
+def _extract_price_changes(search_results: str, industry: str, model: Dict, ctx=None) -> Dict:
     """
-    从搜索结果中提取价格波动信息
+    从多个数据源提取价格波动信息（混合方案）
+    
+    数据源优先级：
+    1. 专业价格API
+    2. 网络搜索结果
+    3. 模拟数据（降级）
     
     Args:
         search_results: 搜索结果JSON字符串
         industry: 行业名称
         model: 行业成本模型
+        ctx: 运行时上下文
         
     Returns:
-        价格变化字典 {材料名: {change_rate: float, direction: str}}
+        价格变化字典 {材料名: {change_rate: float, direction: str, data_source: str}}
     """
     price_changes = {}
     
+    # 策略1: 尝试从专业价格API获取
+    try:
+        from tools.price_api import get_price_for_industry
+        import json as json_module
+        
+        api_result = get_price_for_industry(industry, ctx)
+        
+        if api_result.get("success") and api_result.get("prices"):
+            for price_data in api_result["prices"]:
+                if price_data.get("change_rate"):
+                    # 将API返回的价格变化映射到具体材料
+                    # 例如：LME铜价 → 电解铜箔
+                    material_mapping = _map_indicator_to_material(industry, price_data["indicator"])
+                    
+                    if material_mapping and material_mapping in model["base_materials"]:
+                        # 提取涨跌幅
+                        change_rate_str = price_data["change_rate"]
+                        change_rate = float(change_rate_str.replace('%', '')) / 100
+                        
+                        price_changes[material_mapping] = {
+                            "change_rate": change_rate,
+                            "direction": price_data.get("direction", "up"),
+                            "data_source": price_data.get("data_source", "API"),
+                            "confidence": price_data.get("confidence", 0.8),
+                            "indicator": price_data["indicator"]
+                        }
+        
+        # 如果成功获取到价格数据，直接返回
+        if price_changes:
+            return price_changes
+            
+    except Exception as e:
+        print(f"[价格API获取失败] {industry}: {str(e)}，降级到搜索结果")
+    
+    # 策略2: 从搜索结果中提取价格波动
     try:
         data = json.loads(search_results)
         updates = data.get("risk_updates", [])
-    except:
-        # 如果解析失败，返回模拟数据
-        return _get_mock_price_changes(model)
-    
-    # 价格波动模式匹配
-    price_patterns = [
-        r'涨(\d+(?:\.\d+)?)%',
-        r'上涨(\d+(?:\.\d+)?)%',
-        r'涨幅(\d+(?:\.\d+)?)%',
-        r'跌(\d+(?:\.\d+)?)%',
-        r'下跌(\d+(?:\.\d+)?)%',
-        r'跌幅(\d+(?:\.\d+)?)%',
-        r'涨幅达(\d+(?:\.\d+)?)%',
-        r'上涨\s*(\d+(?:\.\d+)?)%',
-    ]
-    
-    materials = model["base_materials"].keys()
-    
-    for update in updates:
-        text = update.get("snippet", "") + " " + update.get("title", "")
         
-        for material in materials:
-            if material in text or any(keyword in text for keyword in model.get("price_sensitive_materials", [])):
-                # 尝试提取价格变化
-                for pattern in price_patterns:
-                    matches = re.findall(pattern, text)
-                    if matches:
-                        change_rate = float(matches[0]) / 100
-                        direction = "up" if "涨" in text or "上涨" in text else "down"
-                        
-                        if material not in price_changes:
-                            price_changes[material] = {
-                                "change_rate": change_rate,
-                                "direction": direction
-                            }
-                        break
+        # 价格波动模式匹配（增强版）
+        price_patterns = [
+            r'涨(\d+(?:\.\d+)?)%',
+            r'上涨(\d+(?:\.\d+)?)%',
+            r'涨幅(\d+(?:\.\d+)?)%',
+            r'涨幅达(\d+(?:\.\d+)?)%',
+            r'提价(\d+(?:\.\d+)?)%',
+            r'调价(\d+(?:\.\d+)?)%',
+            r'跌(\d+(?:\.\d+)?)%',
+            r'下跌(\d+(?:\.\d+)?)%',
+            r'跌幅(\d+(?:\.\d+)?)%',
+        ]
+        
+        materials = list(model["base_materials"].keys())
+        
+        for update in updates:
+            text = update.get("snippet", "") + " " + update.get("title", "")
+            
+            for material in materials:
+                if material in text or any(keyword in text for keyword in model.get("price_sensitive_materials", [])):
+                    # 尝试提取价格变化
+                    for pattern in price_patterns:
+                        matches = re.findall(pattern, text)
+                        if matches:
+                            change_rate = float(matches[0]) / 100
+                            direction = "up" if "涨" in pattern or "提价" in pattern else "down"
+                            
+                            if material not in price_changes:
+                                price_changes[material] = {
+                                    "change_rate": change_rate,
+                                    "direction": direction,
+                                    "data_source": "网络搜索",
+                                    "confidence": 0.6
+                                }
+                            break
+        
+        # 如果从搜索结果提取到了数据，返回
+        if price_changes:
+            return price_changes
+            
+    except Exception as e:
+        print(f"[搜索结果解析失败] {industry}: {str(e)}，降级到模拟数据")
     
-    # 如果没有提取到价格变化，使用模拟数据
-    if not price_changes:
-        return _get_mock_price_changes(model)
-    
-    return price_changes
+    # 策略3: 降级到模拟数据
+    return _get_mock_price_changes(model, return_with_source=True)
 
 
-def _get_mock_price_changes(model: Dict) -> Dict:
+def _map_indicator_to_material(industry: str, indicator: str) -> Optional[str]:
     """
-    生成模拟的价格变化数据（用于演示）
+    将价格指标映射到具体材料名称
+    
+    Args:
+        industry: 行业名称
+        indicator: 价格指标（如"LME铜价"）
+        
+    Returns:
+        材料名称（如"电解铜箔"）
+    """
+    # 行业-指标-材料映射关系
+    MAPPING = {
+        "PCB": {
+            "LME铜价": "电解铜箔",
+            "钯金现货": "钯/金电镀药水",
+            "黄金现货": "钯/金电镀药水"
+        },
+        "游艇": {
+            "布伦特原油": "不饱和聚酯树脂"
+        },
+        "新型储能": {
+            "LME铜价": "电解液溶剂(DMC/EMC)",
+            "沪铝主力": "铝箔",
+            "布伦特原油": "PVDF粘结剂"
+        },
+        "跨境电商": {
+            "SCFI运费指数": "集装箱运价",
+            "布伦特原油": "航空燃油附加费"
+        }
+    }
+    
+    return MAPPING.get(industry, {}).get(indicator)
+
+
+def _get_mock_price_changes(model: Dict, return_with_source: bool = False) -> Dict:
+    """
+    生成模拟的价格变化数据（降级方案）
     
     注意：实际生产环境中应该从真实数据源获取
+    此函数仅作为最后降级方案使用
     """
     import random
     
@@ -251,7 +337,10 @@ def _get_mock_price_changes(model: Dict) -> Dict:
             change_rate = random.uniform(0.02, 0.08)  # 2%-8%波动
             price_changes[material] = {
                 "change_rate": change_rate,
-                "direction": "up"
+                "direction": "up",
+                "data_source": "估算数据",
+                "confidence": 0.3,
+                "warning": "⚠️ 数据为估算值，仅供参考"
             }
     
     return price_changes

@@ -1,6 +1,7 @@
 """
-市场新闻和价格监控工具
+市场新闻和价格监控工具（增强版）
 获取最新的行业动态和大宗商品价格信息
+支持混合数据源：专业API → 网络搜索 → 模拟数据
 """
 
 from langchain.tools import tool, ToolRuntime
@@ -9,6 +10,9 @@ from coze_coding_utils.runtime_ctx.context import new_context
 from typing import Dict, List, Optional
 import json
 from datetime import datetime
+
+# 导入价格API工具
+from tools.price_api import get_realtime_prices, PRICE_SOURCES
 
 
 # 关键大宗商品和指标配置
@@ -54,8 +58,12 @@ INDUSTRY_KEYWORDS = {
 @tool
 def get_market_news(runtime: ToolRuntime = None) -> str:
     """
-    获取最新的市场新闻和大宗商品价格信息
-    包括原油、铜价、钯金、运费指数等关键指标
+    获取最新的市场新闻和大宗商品价格信息（混合方案）
+    
+    数据源优先级：
+    1. 专业价格API（实时价格）
+    2. 网络搜索（行业动态）
+    3. 降级数据
     
     Returns:
         返回JSON格式的市场新闻和价格信息
@@ -67,32 +75,65 @@ def get_market_news(runtime: ToolRuntime = None) -> str:
     # 收集所有新闻
     all_news = []
     
-    # 1. 搜索关键大宗商品价格
-    for indicator, config in MARKET_INDICATORS.items():
-        try:
-            query = f"{indicator} 最新价格 2026"
-            response = client.web_search(
-                query=query,
-                count=3,
-                need_summary=False
-            )
-            
-            if response.web_items:
-                for item in response.web_items:
-                    news_item = {
-                        "type": "价格指标",
-                        "indicator": indicator,
-                        "title": item.title,
-                        "source": item.site_name,
-                        "url": item.url,
-                        "snippet": item.snippet,
-                        "publish_time": item.publish_time or "近期",
-                        "importance": config["importance"],
-                        "unit": config["unit"]
-                    }
-                    all_news.append(news_item)
-        except Exception:
-            continue
+    # 1. 尝试从专业价格API获取实时价格
+    try:
+        from tools.price_api import get_realtime_prices
+        import json as json_module
+        
+        # 获取所有关键指标的价格
+        price_result_json = get_realtime_prices(runtime=runtime)
+        price_result = json_module.loads(price_result_json)
+        
+        if price_result.get("success") and price_result.get("prices"):
+            for price_data in price_result["prices"]:
+                # 构建价格新闻项
+                news_item = {
+                    "type": "价格指标",
+                    "indicator": price_data["indicator"],
+                    "title": f"{price_data['indicator']} {'上涨' if price_data.get('direction') == 'up' else '下跌'} {price_data.get('change_rate', '0%')}",
+                    "source": price_data.get("source_name", price_data.get("data_source", "未知来源")),
+                    "url": price_data.get("source_url", ""),
+                    "snippet": f"当前价格: {price_data.get('price', 'N/A')} {price_data['unit']}，涨跌幅: {price_data.get('change_rate', 'N/A')}，数据来源: {price_data.get('data_source', '未知')}",
+                    "publish_time": price_data.get("publish_time", datetime.now().strftime("%Y-%m-%d %H:%M")),
+                    "importance": PRICE_SOURCES.get(price_data["indicator"], {}).get("importance", "中"),
+                    "unit": price_data["unit"],
+                    "data_source": price_data.get("data_source", "未知"),
+                    "confidence": price_data.get("confidence", 0),
+                    "is_estimated": price_data.get("is_estimated", False)
+                }
+                all_news.append(news_item)
+                
+    except Exception as e:
+        print(f"[价格API获取失败] {str(e)}，降级到网络搜索")
+    
+    # 2. 如果价格API失败，使用网络搜索补充
+    if not any(news.get("type") == "价格指标" for news in all_news):
+        for indicator, config in MARKET_INDICATORS.items():
+            try:
+                query = f"{indicator} 最新价格 2026"
+                response = client.web_search(
+                    query=query,
+                    count=3,
+                    need_summary=False
+                )
+                
+                if response.web_items:
+                    for item in response.web_items:
+                        news_item = {
+                            "type": "价格指标",
+                            "indicator": indicator,
+                            "title": item.title,
+                            "source": item.site_name,
+                            "url": item.url,
+                            "snippet": item.snippet,
+                            "publish_time": item.publish_time or "近期",
+                            "importance": config["importance"],
+                            "unit": config["unit"],
+                            "data_source": "网络搜索"
+                        }
+                        all_news.append(news_item)
+            except Exception:
+                continue
     
     # 2. 搜索各行业的最新动态
     for industry, keywords in INDUSTRY_KEYWORDS.items():
