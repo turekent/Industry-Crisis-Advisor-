@@ -1,27 +1,19 @@
 """
-API路由：提供实时数据接口
-用于前端页面调用获取最新数据
+API路由：提供实时数据接口（简化版）
 """
 import os
 import json
 import logging
-from typing import Dict, Any, List
+from datetime import datetime
+from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from coze_coding_dev_sdk import SearchClient
+from coze_coding_utils.runtime_ctx.context import new_context
 
 logger = logging.getLogger(__name__)
 
-# 导入工具
-from tools.market_news import MarketNewsTool
-from tools.price_api import PriceAPITool
-from tools.cost_calculator import CostCalculatorTool
-
 router = APIRouter(prefix="/api", tags=["api"])
-
-# 初始化工具实例
-market_news_tool = MarketNewsTool()
-price_api_tool = PriceAPITool()
-cost_calculator_tool = CostCalculatorTool()
 
 
 class IndustryQuery(BaseModel):
@@ -50,37 +42,70 @@ class PriceResponse(BaseModel):
 async def get_realtime_news():
     """
     获取实时市场新闻
-    前端可以定时调用此接口刷新数据
     """
     try:
         logger.info("Fetching realtime market news...")
         
-        # 调用市场新闻工具
-        result = market_news_tool._run(query="战争局势 原材料价格 中东冲突")
+        # 创建搜索客户端
+        ctx = new_context(method="get_realtime_news")
+        client = SearchClient(ctx=ctx)
         
-        # 解析结果
-        news_data = []
-        if result:
-            # 尝试解析JSON
+        all_news = []
+        
+        # 搜索关键市场指标
+        indicators = ["布伦特原油价格", "LME铜价", "钯金价格", "集装箱运费"]
+        
+        for indicator in indicators:
             try:
-                parsed = json.loads(result)
-                if isinstance(parsed, list):
-                    news_data = parsed
-                elif isinstance(parsed, dict) and "news" in parsed:
-                    news_data = parsed["news"]
-            except:
-                # 如果不是JSON，作为文本处理
-                news_data = [{
-                    "title": "市场动态",
-                    "content": result,
-                    "source": "系统",
-                    "time": "刚刚"
-                }]
+                query = f"{indicator} 最新价格 2026"
+                response = client.web_search(
+                    query=query,
+                    count=2,
+                    need_summary=False
+                )
+                
+                if response.web_items:
+                    for item in response.web_items:
+                        news_item = {
+                            "type": "价格指标",
+                            "title": item.title,
+                            "source": item.site_name,
+                            "url": item.url,
+                            "snippet": item.snippet,
+                            "time": item.publish_time or "刚刚"
+                        }
+                        all_news.append(news_item)
+            except Exception as e:
+                logger.warning(f"Failed to search {indicator}: {str(e)}")
+                continue
+        
+        # 搜索中东局势
+        try:
+            query = "中东局势 供应链影响 原材料"
+            response = client.web_search(
+                query=query,
+                count=3,
+                need_summary=False
+            )
+            
+            if response.web_items:
+                for item in response.web_items:
+                    news_item = {
+                        "type": "局势动态",
+                        "title": item.title,
+                        "source": item.site_name,
+                        "url": item.url,
+                        "snippet": item.snippet,
+                        "time": item.publish_time or "刚刚"
+                    }
+                    all_news.append(news_item)
+        except Exception as e:
+            logger.warning(f"Failed to search Middle East news: {str(e)}")
         
         return NewsResponse(
             success=True,
-            data=news_data,
-            timestamp=_get_current_time(),
+            data=all_news[:10],  # 返回最多10条
+            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             message="获取成功"
         )
         
@@ -89,7 +114,7 @@ async def get_realtime_news():
         return NewsResponse(
             success=False,
             data=[],
-            timestamp=_get_current_time(),
+            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             message=f"获取失败: {str(e)}"
         )
 
@@ -103,21 +128,47 @@ async def get_material_price(material: str):
     try:
         logger.info(f"Fetching price for: {material}")
         
-        # 调用价格API工具
-        result = price_api_tool._run(material=material)
+        # 创建搜索客户端
+        ctx = new_context(method="get_material_price")
+        client = SearchClient(ctx=ctx)
         
-        # 解析结果
-        price_data = {}
-        if result:
-            try:
-                price_data = json.loads(result)
-            except:
-                price_data = {"raw": result}
+        material_names = {
+            "copper": "LME铜价",
+            "aluminum": "沪铝价格",
+            "oil": "布伦特原油价格",
+            "gold": "黄金价格",
+            "silver": "白银价格",
+            "palladium": "钯金价格"
+        }
+        
+        name = material_names.get(material, material)
+        query = f"{name} 最新价格 2026"
+        
+        response = client.web_search(
+            query=query,
+            count=3,
+            need_summary=False
+        )
+        
+        price_data = {
+            "material": material,
+            "name": name,
+            "sources": []
+        }
+        
+        if response.web_items:
+            for item in response.web_items:
+                price_data["sources"].append({
+                    "title": item.title,
+                    "source": item.site_name,
+                    "url": item.url,
+                    "snippet": item.snippet
+                })
         
         return PriceResponse(
             success=True,
             data=price_data,
-            timestamp=_get_current_time(),
+            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             message="获取成功"
         )
         
@@ -126,7 +177,7 @@ async def get_material_price(material: str):
         return PriceResponse(
             success=False,
             data={},
-            timestamp=_get_current_time(),
+            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             message=f"获取失败: {str(e)}"
         )
 
@@ -142,14 +193,14 @@ async def get_all_prices():
         materials = ["copper", "aluminum", "oil", "palladium"]
         all_prices = {}
         
+        # 创建搜索客户端
+        ctx = new_context(method="get_all_prices")
+        client = SearchClient(ctx=ctx)
+        
         for material in materials:
             try:
-                result = price_api_tool._run(material=material)
-                if result:
-                    try:
-                        all_prices[material] = json.loads(result)
-                    except:
-                        all_prices[material] = {"raw": result}
+                result = await get_material_price(material)
+                all_prices[material] = result.data
             except Exception as e:
                 logger.warning(f"Failed to fetch {material}: {str(e)}")
                 all_prices[material] = {"error": str(e)}
@@ -157,7 +208,7 @@ async def get_all_prices():
         return PriceResponse(
             success=True,
             data=all_prices,
-            timestamp=_get_current_time(),
+            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             message="获取成功"
         )
         
@@ -166,7 +217,7 @@ async def get_all_prices():
         return PriceResponse(
             success=False,
             data={},
-            timestamp=_get_current_time(),
+            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             message=f"获取失败: {str(e)}"
         )
 
@@ -179,25 +230,37 @@ async def analyze_industry(query: IndustryQuery):
     try:
         logger.info(f"Analyzing industry: {query.industry}")
         
-        # 调用成本计算工具
-        result = cost_calculator_tool._run(
-            industry=query.industry,
-            scenario=query.detail or "默认场景"
+        # 创建搜索客户端
+        ctx = new_context(method="analyze_industry")
+        client = SearchClient(ctx=ctx)
+        
+        # 搜索该行业的风险信息
+        search_query = f"{query.industry} 中东局势 影响 原材料 价格风险"
+        response = client.web_search_with_summary(
+            query=search_query,
+            count=5
         )
         
-        # 解析结果
-        analysis_data = {}
-        if result:
-            try:
-                analysis_data = json.loads(result)
-            except:
-                analysis_data = {"analysis": result}
+        analysis_data = {
+            "industry": query.industry,
+            "summary": response.summary if hasattr(response, 'summary') else "",
+            "sources": []
+        }
+        
+        if response.web_items:
+            for item in response.web_items:
+                analysis_data["sources"].append({
+                    "title": item.title,
+                    "source": item.site_name,
+                    "url": item.url,
+                    "snippet": item.snippet
+                })
         
         return {
             "success": True,
             "industry": query.industry,
             "data": analysis_data,
-            "timestamp": _get_current_time()
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
     except Exception as e:
@@ -206,7 +269,7 @@ async def analyze_industry(query: IndustryQuery):
             "success": False,
             "industry": query.industry,
             "error": str(e),
-            "timestamp": _get_current_time()
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
 
 
@@ -218,11 +281,5 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "Industry Risk Advisor API",
-        "timestamp": _get_current_time()
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
-
-
-def _get_current_time() -> str:
-    """获取当前时间字符串"""
-    from datetime import datetime
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
