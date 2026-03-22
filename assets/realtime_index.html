@@ -210,6 +210,17 @@
             font-weight: 500;
         }
 
+        .news-type-vip {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .source-badge {
+            display: inline-block;
+            margin-right: 4px;
+            font-size: 14px;
+        }
+
         .quick-price {
             background: #f7fafc;
             padding: 15px;
@@ -371,12 +382,19 @@
                     <span>刷新</span>
                 </button>
             </h2>
+            <div class="info-box">
+                <strong>来源优先级：</strong>
+                📊彭博社、📰路透社、📈华尔街日报 &gt; 
+                💹财新网、📊东方财富 &gt; 
+                🐦X/Twitter大V &gt; 
+                其他来源
+            </div>
             <div class="timestamp" id="newsTimestamp">最后更新：--</div>
             
             <div id="newsContainer">
                 <div style="text-align: center; padding: 30px; color: #a0aec0;">
                     <div class="loading-spinner"></div>
-                    <p style="margin-top: 10px;">正在加载数据...</p>
+                    <p style="margin-top: 10px;">正在加载权威来源数据...</p>
                 </div>
             </div>
         </div>
@@ -600,26 +618,36 @@
                 return;
             }
             
-            container.innerHTML = newsList.map((news, index) => `
-                <div class="news-item" onclick="toggleNews(this)">
-                    <div class="news-title">
-                        <span>${news.title || '市场动态'}</span>
-                        <span class="expand-icon">▼</span>
-                    </div>
-                    <div class="news-meta">
-                        <span class="news-type">${news.type || '动态'}</span>
-                        <span>📍 ${news.source || '系统'}</span>
-                        <span>🕐 ${formatTime(news.time)}</span>
-                    </div>
-                    <div class="news-snippet">${news.snippet || ''}</div>
-                    <div class="news-detail">
-                        <div class="news-detail-content">
-                            ${news.snippet || '暂无详细内容'}
+            container.innerHTML = newsList.map((news, index) => {
+                const sourceIcon = news.source_icon || '📄';
+                const sourceName = news.source || '系统';
+                const newsType = news.type || '动态';
+                const typeClass = newsType === '大V观点' ? 'news-type-vip' : '';
+                
+                return `
+                    <div class="news-item" onclick="toggleNews(this)">
+                        <div class="news-title">
+                            <span>
+                                <span class="source-badge">${sourceIcon}</span>
+                                ${news.title || '市场动态'}
+                            </span>
+                            <span class="expand-icon">▼</span>
                         </div>
-                        ${news.url ? `<div style="margin-top: 10px; text-align: right;"><a href="${news.url}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 12px;">查看原文 →</a></div>` : ''}
+                        <div class="news-meta">
+                            <span class="news-type ${typeClass}">${newsType}</span>
+                            <span>📍 ${sourceName}</span>
+                            <span>🕐 ${formatTime(news.time)}</span>
+                        </div>
+                        <div class="news-snippet">${news.snippet || ''}</div>
+                        <div class="news-detail">
+                            <div class="news-detail-content">
+                                ${news.snippet || '暂无详细内容'}
+                            </div>
+                            ${news.url ? `<div style="margin-top: 10px; text-align: right;"><a href="${news.url}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 12px;">查看原文 →</a></div>` : ''}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // 行业分析
