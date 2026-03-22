@@ -238,9 +238,17 @@ class GraphService:
 service = GraphService()
 app = FastAPI()
 
-# 导入并注册 API 路由
+# 导入并注册 API 路由（增强版）
 try:
-    from api_routes import router as api_router
+    # 优先使用增强版API路由
+    try:
+        from api_routes_enhanced import router as api_router
+        logger.info("Using enhanced API routes with retry, timeout, cache, and concurrency control")
+    except ImportError:
+        # 回退到普通版本
+        from api_routes import router as api_router
+        logger.info("Using standard API routes")
+    
     app.include_router(api_router)
     logger.info("API routes registered successfully")
 except Exception as e:

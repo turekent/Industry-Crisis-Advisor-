@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>产业避险参谋 - 实时版（增强版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 22px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header h1::before {
+            content: "🛡️";
+            font-size: 28px;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .industries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .industry-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .refresh-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .refresh-btn.loading::after {
+            content: "";
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #2c5282;
+        }
+
+        .source-priority {
+            background: #faf5ff;
+            border-left: 4px solid #9f7aea;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #553c9a;
+        }
+
+        .source-priority strong {
+            color: #6b46c1;
+        }
+
+        .quick-price {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-price-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .quick-price-item .label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .quick-price-item .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .quick-price-item .change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .change.up {
+            color: #38a169;
+        }
+
+        .change.down {
+            color: #e53e3e;
+        }
+
+        .news-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .news-item {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border-left: 3px solid #667eea;
+        }
+
+        .news-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .news-item.error {
+            border-left-color: #fc8181;
+            background: #fff5f5;
+        }
+
+        .news-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .news-title span {
+            flex: 1;
+            padding-right: 10px;
+        }
+
+        .source-badge {
+            display: inline-block;
+            margin-right: 6px;
+            font-size: 16px;
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .news-type {
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .news-type-vip {
+            background: #faf5ff;
+            color: #6b46c1;
+        }
+
+        .news-snippet {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-detail {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .news-detail.show {
+            display: block;
+        }
+
+        .news-detail-content {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .error-message {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 15px;
+            border-radius: 8px;
+            color: #c53030;
+            font-size: 14px;
+        }
+
+        .retry-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .retry-btn:hover {
+            background: #c53030;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .status-indicator.cached {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-indicator.fresh {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .status-indicator.error {
+            background: #fed7d7;
+            color: #822727;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 10px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 15px;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d3748;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #38a169;
+        }
+
+        .toast.error {
+            background: #e53e3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>产业避险参谋</h1>
+            <div class="subtitle">
+                基于战争实时动态的成本预警与采购建议<br>
+                <small style="color: #a0aec0;">六大行业：PCB、游艇、生物医药、新型储能、打印耗材、跨境电商</small>
+            </div>
+            <div class="industries">
+                <span class="industry-tag">PCB</span>
+                <span class="industry-tag">游艇</span>
+                <span class="industry-tag">生物医药</span>
+                <span class="industry-tag">新型储能</span>
+                <span class="industry-tag">打印耗材</span>
+                <span class="industry-tag">跨境电商</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>
+                📰 实时市场动态
+                <button class="refresh-btn" id="refreshNewsBtn" onclick="refreshNews()">
+                    <span>🔄</span> 刷新
+                </button>
+            </h2>
+            
+            <div class="source-priority">
+                <strong>来源优先级：</strong>
+                📊彭博社、📰路透社、📈华尔街日报 > 
+                💹财新网、📊东方财富 > 
+                🐦X/Twitter大V > 
+                其他来源
+            </div>
+            
+            <div class="timestamp" id="newsTimestamp">--</div>
+            <span class="status-indicator" id="newsStatus" style="display: none;"></span>
+            
+            <div class="news-container" id="newsContainer">
+                <p style="color: #a0aec0; text-align: center; padding: 20px;">
+                    正在加载最新数据...
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💰 核心价格指标</h2>
+            <div class="info-box">
+                💡 价格数据从实时新闻中自动提取，详细分析请在下方选择行业查询
+            </div>
+            <div class="quick-price" id="quickPriceContainer">
+                <div class="quick-price-item">
+                    <div class="label">布伦特原油</div>
+                    <div class="value" id="oilPrice">--</div>
+                    <div class="change" id="oilChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">LME铜</div>
+                    <div class="value" id="copperPrice">--</div>
+                    <div class="change" id="copperChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">LME铝</div>
+                    <div class="value" id="aluminumPrice">--</div>
+                    <div class="change" id="aluminumChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">钯金</div>
+                    <div class="value" id="palladiumPrice">--</div>
+                    <div class="change" id="palladiumChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">黄金</div>
+                    <div class="value" id="goldPrice">--</div>
+                    <div class="change" id="goldChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">SCFI运费</div>
+                    <div class="value" id="scfiPrice">--</div>
+                    <div class="change" id="scfiChange">--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">正在加载数据...</div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==================== 配置项 ====================
+        const CONFIG = {
+            apiBase: window.location.origin + '/api',
+            maxRetries: 3,           // 最大重试次数
+            retryDelay: 2000,        // 重试延迟（毫秒）
+            autoRefreshInterval: 5 * 60 * 1000,  // 自动刷新间隔（5分钟）
+            timeout: 15000           // 请求超时（15秒）
+        };
+
+        // ==================== 全局状态 ====================
+        let state = {
+            news: [],
+            prices: {},
+            retryCount: 0,
+            lastUpdateTime: null,
+            autoRefreshTimer: null
+        };
+
+        // ==================== 工具函数 ====================
+        
+        // 显示 Toast 提示
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 显示/隐藏加载遮罩
+        function showLoading(show = true, text = '正在加载数据...') {
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            
+            if (show) {
+                loadingText.textContent = text;
+                overlay.classList.add('show');
+            } else {
+                overlay.classList.remove('show');
+            }
+        }
+
+        // 格式化时间
+        function formatTime(timestamp) {
+            if (!timestamp) return '--';
+            
+            // 如果是相对时间，直接返回
+            if (typeof timestamp === 'string' && (
+                timestamp.includes('小时前') || 
+                timestamp.includes('分钟前') || 
+                timestamp.includes('刚刚') ||
+                timestamp.includes('今天')
+            )) {
+                return timestamp;
+            }
+            
+            // 尝试解析日期
+            try {
+                const date = new Date(timestamp);
+                if (isNaN(date.getTime())) return timestamp;
+                
+                const now = new Date();
+                const diff = now - date;
+                
+                // 如果是今天
+                if (diff < 24 * 60 * 60 * 1000) {
+                    const hours = Math.floor(diff / (60 * 60 * 1000));
+                    if (hours < 1) {
+                        const minutes = Math.floor(diff / (60 * 1000));
+                        return `${minutes}分钟前`;
+                    }
+                    return `${hours}小时前`;
+                }
+                
+                // 否则显示完整日期
+                return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+            } catch {
+                return timestamp;
+            }
+        }
+
+        // 带重试和超时的 fetch
+        async function fetchWithRetry(url, options = {}, retries = CONFIG.maxRetries) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), CONFIG.timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                
+                if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network'))) {
+                    console.log(`请求失败，${CONFIG.retryDelay / 1000}秒后重试... (剩余${retries}次)`);
+                    await new Promise(resolve => setTimeout(resolve, CONFIG.retryDelay));
+                    return fetchWithRetry(url, options, retries - 1);
+                }
+                
+                throw error;
+            }
+        }
+
+        // 更新状态指示器
+        function updateStatus(elementId, cached = false, error = false) {
+            const statusEl = document.getElementById(elementId);
+            
+            if (error) {
+                statusEl.className = 'status-indicator error';
+                statusEl.textContent = '❌ 获取失败';
+                statusEl.style.display = 'inline-flex';
+            } else if (cached) {
+                statusEl.className = 'status-indicator cached';
+                statusEl.textContent = '📦 缓存数据';
+                statusEl.style.display = 'inline-flex';
+            } else {
+                statusEl.className = 'status-indicator fresh';
+                statusEl.textContent = '✨ 实时数据';
+                statusEl.style.display = 'inline-flex';
+            }
+        }
+
+        // ==================== 数据获取函数 ====================
+        
+        // 刷新新闻
+        async function refreshNews() {
+            const btn = document.getElementById('refreshNewsBtn');
+            const container = document.getElementById('newsContainer');
+            const timestamp = document.getElementById('newsTimestamp');
+            
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetchWithRetry(`${CONFIG.apiBase}/news/realtime`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    state.news = data.data;
+                    renderNews(data.data);
+                    timestamp.textContent = `最后更新：${formatTime(data.timestamp)}`;
+                    updateStatus('newsStatus', data.cached, false);
+                    
+                    // 从新闻中提取价格信息
+                    extractPricesFromNews(data.data);
+                    
+                    // 重置重试计数
+                    state.retryCount = 0;
+                    
+                    if (!data.cached) {
+                        showToast('✅ 数据刷新成功', 'success');
+                    }
+                } else {
+                    throw new Error(data.message || '暂无新闻数据');
+                }
+            } catch (error) {
+                console.error('Failed to fetch news:', error);
+                
+                // 显示错误信息
+                container.innerHTML = `
+                    <div class="error-message">
+                        ❌ 数据加载失败：${error.message}<br>
+                        <small>请检查网络连接或稍后重试</small>
+                        <br>
+                        <button class="retry-btn" onclick="refreshNews()">
+                            🔄 重新加载
+                        </button>
+                    </div>
+                `;
+                
+                updateStatus('newsStatus', false, true);
+                
+                // 自动重试（最多3次）
+                state.retryCount++;
+                if (state.retryCount < CONFIG.maxRetries) {
+                    setTimeout(() => {
+                        console.log(`自动重试 (${state.retryCount}/${CONFIG.maxRetries})...`);
+                        refreshNews();
+                    }, CONFIG.retryDelay * state.retryCount);
+                }
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // 从新闻中提取价格信息
+        function extractPricesFromNews(newsList) {
+            // 重置价格
+            const materials = ['oil', 'copper', 'aluminum', 'palladium', 'gold', 'scfi'];
+            materials.forEach(m => {
+                document.getElementById(`${m}Price`).textContent = '--';
+                document.getElementById(`${m}Change`).textContent = '--';
+            });
+            
+            // 遍历新闻提取价格
+            for (const news of newsList) {
+                const title = news.title || '';
+                const snippet = news.snippet || '';
+                const text = title + ' ' + snippet;
+                
+                // 提取原油价格
+                if (text.includes('原油') || text.includes('布伦特')) {
+                    extractAndUpdatePrice(text, 'oil', /(\d+\.?\d*)\s*美元.*?桶/, '美元/桶');
+                }
+                
+                // 提取铜价
+                if (text.includes('铜') || text.includes('LME')) {
+                    extractAndUpdatePrice(text, 'copper', /(\d+\.?\d*)\s*美元.*?吨/, '美元/吨');
+                }
+                
+                // 提取铝价
+                if (text.includes('铝') || text.includes('LME铝')) {
+                    extractAndUpdatePrice(text, 'aluminum', /(\d+\.?\d*)\s*美元.*?吨/, '美元/吨');
+                }
+                
+                // 提取钯金价格
+                if (text.includes('钯金')) {
+                    extractAndUpdatePrice(text, 'palladium', /(\d+\.?\d*)\s*美元.*?盎司/, '美元/盎司');
+                }
+                
+                // 提取黄金价格
+                if (text.includes('黄金') || text.includes('金价')) {
+                    extractAndUpdatePrice(text, 'gold', /(\d+\.?\d*)\s*美元/, '美元');
+                }
+                
+                // 提取SCFI运费
+                if (text.includes('SCFI') || text.includes('集装箱运费') || text.includes('运价')) {
+                    extractAndUpdatePrice(text, 'scfi', /(\d+\.?\d*)\s*(点|美元)/, '点');
+                }
+            }
+        }
+
+        // 提取并更新价格
+        function extractAndUpdatePrice(text, material, pattern, unit) {
+            const match = text.match(pattern);
+            if (match && document.getElementById(`${material}Price`).textContent === '--') {
+                document.getElementById(`${material}Price`).textContent = match[1] + unit;
+            }
+            
+            // 提取涨跌幅
+            const changeMatch = text.match(/(涨|跌)\s*(\d+\.?\d*)\s*[%美元]/);
+            if (changeMatch && document.getElementById(`${material}Change`).textContent === '--') {
+                const changeEl = document.getElementById(`${material}Change`);
+                changeEl.textContent = (changeMatch[1] === '跌' ? '↓' : '↑') + changeMatch[2] + (changeMatch[0].includes('%') ? '%' : '');
+                changeEl.className = 'change ' + (changeMatch[1] === '跌' ? 'down' : 'up');
+            }
+        }
+
+        // 渲染新闻列表
+        function renderNews(newsList) {
+            const container = document.getElementById('newsContainer');
+            
+            if (!newsList || newsList.length === 0) {
+                container.innerHTML = '<p style="color: #a0aec0; text-align: center; padding: 20px;">暂无新闻数据</p>';
+                return;
+            }
+            
+            container.innerHTML = newsList.map((news, index) => {
+                const sourceIcon = news.source_icon || '📄';
+                const sourceName = news.source || '系统';
+                const newsType = news.type || '动态';
+                const typeClass = newsType === '大V观点' ? 'news-type-vip' : '';
+                
+                return `
+                    <div class="news-item" onclick="toggleNews(this)">
+                        <div class="news-title">
+                            <span>
+                                <span class="source-badge">${sourceIcon}</span>
+                                ${news.title || '市场动态'}
+                            </span>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="news-meta">
+                            <span class="news-type ${typeClass}">${newsType}</span>
+                            <span>📍 ${sourceName}</span>
+                            <span>🕐 ${formatTime(news.time)}</span>
+                        </div>
+                        <div class="news-snippet">${news.snippet || ''}</div>
+                        <div class="news-detail">
+                            <div class="news-detail-content">
+                                ${news.snippet || '暂无详细内容'}
+                            </div>
+                            ${news.url ? `<div style="margin-top: 10px; text-align: right;"><a href="${news.url}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 12px;">查看原文 →</a></div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 切换新闻详情
+        function toggleNews(element) {
+            const detail = element.querySelector('.news-detail');
+            const icon = element.querySelector('.expand-icon');
+            
+            if (detail.classList.contains('show')) {
+                detail.classList.remove('show');
+                icon.textContent = '▼';
+            } else {
+                detail.classList.add('show');
+                icon.textContent = '▲';
+            }
+        }
+
+        // ==================== 初始化 ====================
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('产业避险参谋 - 实时版（增强版）已加载');
+            
+            // 加载新闻
+            refreshNews();
+            
+            // 设置自动刷新
+            state.autoRefreshTimer = setInterval(() => {
+                console.log('自动刷新新闻...');
+                refreshNews();
+            }, CONFIG.autoRefreshInterval);
+            
+            // 显示欢迎提示
+            setTimeout(() => {
+                showToast('👋 欢迎使用产业避险参谋', 'info');
+            }, 1000);
+        });
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', () => {
+            if (state.autoRefreshTimer) {
+                clearInterval(state.autoRefreshTimer);
+            }
+        });
+
+        // 网络状态监控
+        window.addEventListener('online', () => {
+            showToast('🌐 网络已恢复，正在刷新数据...', 'success');
+            refreshNews();
+        });
+
+        window.addEventListener('offline', () => {
+            showToast('⚠️ 网络已断开，请检查网络连接', 'error');
+        });
+    </script>
+</body>
+</html>
