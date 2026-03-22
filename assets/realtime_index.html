@@ -212,28 +212,34 @@
 
         .quick-price {
             background: #f7fafc;
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
-            display: flex;
-            justify-content: space-around;
-            gap: 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
         }
 
         .quick-price-item {
             text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .quick-price-item .label {
             font-size: 12px;
             color: #718096;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
 
         .quick-price-item .value {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             color: #2d3748;
+            margin-bottom: 4px;
         }
 
         .quick-price-item .change {
@@ -247,6 +253,12 @@
 
         .quick-price-item .change.down {
             color: #38a169;
+        }
+
+        @media (max-width: 600px) {
+            .quick-price {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .input-group {
@@ -372,7 +384,7 @@
         <div class="section">
             <h2>💰 核心价格指标</h2>
             <div class="info-box">
-                💡 提示：详细的原材料价格信息将在行业分析时实时搜索获取
+                💡 价格数据从实时新闻中自动提取，详细分析请在下方选择行业查询
             </div>
             <div class="quick-price" id="quickPriceContainer">
                 <div class="quick-price-item">
@@ -384,6 +396,26 @@
                     <div class="label">LME铜</div>
                     <div class="value" id="copperPrice">--</div>
                     <div class="change" id="copperChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">LME铝</div>
+                    <div class="value" id="aluminumPrice">--</div>
+                    <div class="change" id="aluminumChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">钯金</div>
+                    <div class="value" id="palladiumPrice">--</div>
+                    <div class="change" id="palladiumChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">黄金</div>
+                    <div class="value" id="goldPrice">--</div>
+                    <div class="change" id="goldChange">--</div>
+                </div>
+                <div class="quick-price-item">
+                    <div class="label">SCFI运费</div>
+                    <div class="value" id="scfiPrice">--</div>
+                    <div class="change" id="scfiChange">--</div>
                 </div>
             </div>
         </div>
@@ -469,15 +501,17 @@
             // 尝试从新闻标题中提取价格
             for (const news of newsList) {
                 const title = news.title || '';
+                const snippet = news.snippet || '';
+                const text = title + ' ' + snippet;
                 
                 // 提取原油价格
-                if (title.includes('原油') || title.includes('布伦特')) {
-                    const match = title.match(/(\d+\.?\d*)\s*美元/);
+                if (text.includes('原油') || text.includes('布伦特')) {
+                    const match = text.match(/(\d+\.?\d*)\s*美元.*?桶/);
                     if (match) {
                         document.getElementById('oilPrice').textContent = match[1] + '美元/桶';
                     }
                     // 提取涨跌幅
-                    const changeMatch = title.match(/(涨|跌|涨跌)\s*(\d+\.?\d*)\s*%/);
+                    const changeMatch = text.match(/(涨|跌|涨跌)\s*(\d+\.?\d*)\s*%/);
                     if (changeMatch) {
                         const changeEl = document.getElementById('oilChange');
                         changeEl.textContent = (changeMatch[1] === '跌' ? '↓' : '↑') + changeMatch[2] + '%';
@@ -486,15 +520,71 @@
                 }
                 
                 // 提取铜价
-                if (title.includes('铜') || title.includes('LME')) {
-                    const match = title.match(/(\d+\.?\d*)\s*美元/);
+                if (text.includes('铜') || text.includes('LME')) {
+                    const match = text.match(/(\d+\.?\d*)\s*美元.*?吨/);
                     if (match) {
                         document.getElementById('copperPrice').textContent = match[1] + '美元/吨';
                     }
-                    const changeMatch = title.match(/(跌|涨)\s*(\d+)\s*美元/);
+                    const changeMatch = text.match(/(跌|涨)\s*(\d+)\s*美元/);
                     if (changeMatch) {
                         const changeEl = document.getElementById('copperChange');
                         changeEl.textContent = (changeMatch[1] === '跌' ? '↓' : '↑') + changeMatch[2] + '美元';
+                        changeEl.className = 'change ' + (changeMatch[1] === '跌' ? 'down' : 'up');
+                    }
+                }
+                
+                // 提取铝价
+                if (text.includes('铝') || text.includes('LME铝')) {
+                    const match = text.match(/(\d+\.?\d*)\s*美元.*?吨/);
+                    if (match) {
+                        document.getElementById('aluminumPrice').textContent = match[1] + '美元/吨';
+                    }
+                    const changeMatch = text.match(/(跌|涨)\s*(\d+)\s*美元/);
+                    if (changeMatch) {
+                        const changeEl = document.getElementById('aluminumChange');
+                        changeEl.textContent = (changeMatch[1] === '跌' ? '↓' : '↑') + changeMatch[2] + '美元';
+                        changeEl.className = 'change ' + (changeMatch[1] === '跌' ? 'down' : 'up');
+                    }
+                }
+                
+                // 提取钯金价格
+                if (text.includes('钯金')) {
+                    const match = text.match(/(\d+\.?\d*)\s*美元.*?盎司/);
+                    if (match) {
+                        document.getElementById('palladiumPrice').textContent = match[1] + '美元/盎司';
+                    }
+                    const changeMatch = text.match(/(涨|跌)\s*(\d+\.?\d*)\s*%/);
+                    if (changeMatch) {
+                        const changeEl = document.getElementById('palladiumChange');
+                        changeEl.textContent = (changeMatch[1] === '跌' ? '↓' : '↑') + changeMatch[2] + '%';
+                        changeEl.className = 'change ' + (changeMatch[1] === '跌' ? 'down' : 'up');
+                    }
+                }
+                
+                // 提取黄金价格
+                if (text.includes('黄金') || text.includes('金价')) {
+                    const match = text.match(/(\d+\.?\d*)\s*美元/);
+                    if (match) {
+                        document.getElementById('goldPrice').textContent = match[1] + '美元';
+                    }
+                    const changeMatch = text.match(/(涨|跌)\s*(\d+\.?\d*)\s*%/);
+                    if (changeMatch) {
+                        const changeEl = document.getElementById('goldChange');
+                        changeEl.textContent = (changeMatch[1] === '跌' ? '↓' : '↑') + changeMatch[2] + '%';
+                        changeEl.className = 'change ' + (changeMatch[1] === '跌' ? 'down' : 'up');
+                    }
+                }
+                
+                // 提取SCFI运费
+                if (text.includes('SCFI') || text.includes('集装箱运费') || text.includes('运价')) {
+                    const match = text.match(/(\d+\.?\d*)\s*(点|美元)/);
+                    if (match) {
+                        document.getElementById('scfiPrice').textContent = match[1] + (match[2] === '点' ? '点' : '美元');
+                    }
+                    const changeMatch = text.match(/(涨|跌)\s*(\d+\.?\d*)\s*%/);
+                    if (changeMatch) {
+                        const changeEl = document.getElementById('scfiChange');
+                        changeEl.textContent = (changeMatch[1] === '跌' ? '↓' : '↑') + changeMatch[2] + '%';
                         changeEl.className = 'change ' + (changeMatch[1] === '跌' ? 'down' : 'up');
                     }
                 }

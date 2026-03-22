@@ -41,7 +41,7 @@ class PriceResponse(BaseModel):
 @router.get("/news/realtime", response_model=NewsResponse)
 async def get_realtime_news():
     """
-    获取实时市场新闻
+    获取实时市场新闻（只返回当天的数据）
     """
     try:
         logger.info("Fetching realtime market news...")
@@ -52,59 +52,63 @@ async def get_realtime_news():
         
         all_news = []
         
-        # 搜索关键市场指标
-        indicators = ["布伦特原油价格", "LME铜价", "钯金价格", "集装箱运费"]
+        # 获取今天的日期
+        from datetime import date
+        today = date.today().strftime("%Y-%m-%d")
         
-        for indicator in indicators:
+        # 搜索关键市场指标（只搜索今天的数据）
+        indicators = [
+            f"布伦特原油价格 {today}",
+            f"LME铜价 {today}",
+            f"钯金价格 {today}",
+            f"集装箱运费 {today}",
+            f"中东局势 供应链 {today}",
+            f"原材料价格 {today}"
+        ]
+        
+        for query in indicators:
             try:
-                query = f"{indicator} 最新价格 2026"
                 response = client.web_search(
                     query=query,
-                    count=2,
+                    count=3,
                     need_summary=False
                 )
                 
                 if response.web_items:
                     for item in response.web_items:
-                        news_item = {
-                            "type": "价格指标",
-                            "title": item.title,
-                            "source": item.site_name,
-                            "url": item.url,
-                            "snippet": item.snippet,
-                            "time": item.publish_time or "刚刚"
-                        }
-                        all_news.append(news_item)
+                        # 过滤：只保留今天的新闻
+                        publish_time = item.publish_time or ""
+                        if today in publish_time or "小时前" in publish_time or "分钟前" in publish_time or "刚刚" in publish_time:
+                            news_item = {
+                                "type": "市场动态",
+                                "title": item.title,
+                                "source": item.site_name,
+                                "url": item.url,
+                                "snippet": item.snippet,
+                                "time": publish_time or "今天"
+                            }
+                            all_news.append(news_item)
             except Exception as e:
-                logger.warning(f"Failed to search {indicator}: {str(e)}")
+                logger.warning(f"Failed to search {query}: {str(e)}")
                 continue
         
-        # 搜索中东局势
-        try:
-            query = "中东局势 供应链影响 原材料"
-            response = client.web_search(
-                query=query,
-                count=3,
-                need_summary=False
-            )
-            
-            if response.web_items:
-                for item in response.web_items:
-                    news_item = {
-                        "type": "局势动态",
-                        "title": item.title,
-                        "source": item.site_name,
-                        "url": item.url,
-                        "snippet": item.snippet,
-                        "time": item.publish_time or "刚刚"
-                    }
-                    all_news.append(news_item)
-        except Exception as e:
-            logger.warning(f"Failed to search Middle East news: {str(e)}")
+        # 去重（基于标题）
+        seen_titles = set()
+        unique_news = []
+        for news in all_news:
+            if news["title"] not in seen_titles:
+                seen_titles.add(news["title"])
+                unique_news.append(news)
+        
+        # 按时间排序（最新的在前）
+        unique_news.sort(key=lambda x: x.get("time", ""), reverse=True)
+        
+        # 限制返回15条
+        unique_news = unique_news[:15]
         
         return NewsResponse(
             success=True,
-            data=all_news[:10],  # 返回最多10条
+            data=unique_news,
             timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             message="获取成功"
         )
