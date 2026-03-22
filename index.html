@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>你的产业避险参谋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 22px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header h1::before {
+            content: "🛡️";
+            font-size: 28px;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .industries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .industry-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .news-item {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .news-item:hover {
+            background: #f7fafc;
+            margin: 0 -10px;
+            padding: 12px 10px;
+            border-radius: 8px;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-title {
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .news-title .expand-icon {
+            font-size: 12px;
+            color: #a0aec0;
+            transition: transform 0.3s;
+        }
+
+        .news-item.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 11px;
+            color: #a0aec0;
+            margin-bottom: 6px;
+        }
+
+        .news-snippet {
+            color: #718096;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .news-detail {
+            display: none;
+            margin-top: 10px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .news-item.expanded .news-detail {
+            display: block;
+        }
+
+        .news-detail-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .news-detail-content {
+            color: #4a5568;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .news-detail-source {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .news-detail-source span {
+            font-size: 11px;
+            color: #a0aec0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+        }
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 11px;
+            color: #a0aec0;
+            margin-bottom: 6px;
+        }
+
+        .news-snippet {
+            color: #718096;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .news-type {
+            display: inline-block;
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #4a5568;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-content {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #2d3748;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border-left: 3px solid #4299e1;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #4a5568;
+        }
+
+        .info-box strong {
+            color: #2b6cb0;
+        }
+
+        .share-tip {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #276749;
+        }
+
+        .timestamp {
+            color: #a0aec0;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>产业避险参谋</h1>
+            <div class="subtitle">
+                针对6大行业提供战争实时动态的成本预警和采购建议
+            </div>
+            <div class="industries">
+                <span class="industry-tag">🏭 PCB</span>
+                <span class="industry-tag">🛥️ 游艇</span>
+                <span class="industry-tag">💊 生物医药</span>
+                <span class="industry-tag">🔋 新型储能</span>
+                <span class="industry-tag">🖨️ 打印耗材</span>
+                <span class="industry-tag">📦 跨境电商</span>
+            </div>
+        </div>
+
+        <div class="share-tip">
+            💡 <strong>微信使用提示</strong>：点击右上角菜单 → 发送给朋友 / 分享到朋友圈
+        </div>
+
+        <div class="section">
+            <h2>📰 实时市场动态</h2>
+            <div class="timestamp">最后更新：2026-03-21 10:35</div>
+            
+            <div class="news-item" onclick="toggleNews(this)">
+                <div class="news-title">
+                    <span>🔴 中东局势持续紧张，霍尔木兹海峡运输受阻</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="news-meta">
+                    <span class="news-type">局势动态</span>
+                    <span>📍 路透社</span>
+                    <span>🕐 10:32</span>
+                </div>
+                <div class="news-snippet">美国与伊朗冲突升级，霍尔木兹海峡航道通行受限，全球原油供应链面临严重威胁...</div>
+                <div class="news-detail">
+                    <div class="news-detail-title">📄 详细内容</div>
+                    <div class="news-detail-content">
+                        <p><strong>事件概述：</strong>2026年3月21日，美国与伊朗在波斯湾地区的冲突持续升级，伊朗武装力量加强对霍尔木兹海峡的控制，导致该航道通行能力下降40%。</p>
+                        <p><strong>影响范围：</strong>霍尔木兹海峡是全球最重要的石油运输通道，每日约有2100万桶原油通过该海峡，占全球石油消费量的21%。航道受阻直接影响：</p>
+                        <ul>
+                            <li>• 原油运输成本上涨30%-50%</li>
+                            <li>• 石化原料供应链中断风险</li>
+                            <li>• 游艇、新型储能等行业树脂成本承压</li>
+                        </ul>
+                        <p><strong>专家观点：</strong>多位能源分析师认为，如果局势在未来2周内未能缓解，国际油价可能突破150美元/桶，对全球制造业造成重大冲击。</p>
+                    </div>
+                    <div class="news-detail-source">
+                        <span>📌 来源：路透社 | 发布时间：2026-03-21 10:32</span>
+                        <button class="btn-link" onclick="event.stopPropagation(); window.open('https://www.reuters.com', '_blank')">查看原文</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="news-item" onclick="toggleNews(this)">
+                <div class="news-title">
+                    <span>📊 布伦特原油突破$125，石化产业链承压</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="news-meta">
+                    <span class="news-type">价格指标</span>
+                    <span>📍 彭博社</span>
+                    <span>🕐 09:48</span>
+                </div>
+                <div class="news-snippet">国际油价攀升，布伦特原油期货突破每桶125美元，涨幅4.7%，创近3个月新高...</div>
+                <div class="news-detail">
+                    <div class="news-detail-title">📄 详细内容</div>
+                    <div class="news-detail-content">
+                        <p><strong>价格详情：</strong></p>
+                        <ul>
+                            <li>• 布伦特原油：$125.43/桶（↑4.7%）</li>
+                            <li>• WTI原油：$119.87/桶（↑5.1%）</li>
+                            <li>• 迪拜原油：$122.65/桶（↑4.3%）</li>
+                        </ul>
+                        <p><strong>价格驱动因素：</strong></p>
+                        <ul>
+                            <li>• 中东局势紧张导致供应担忧</li>
+                            <li>• OPEC+维持减产政策</li>
+                            <li>• 美国原油库存意外下降</li>
+                        </ul>
+                        <p><strong>对六大行业的影响：</strong></p>
+                        <ul>
+                            <li>• <strong>游艇</strong>：树脂成本预计上涨8%-12%</li>
+                            <li>• <strong>新型储能</strong>：PVDF粘结剂成本承压</li>
+                            <li>• <strong>跨境电商</strong>：航空燃油附加费上调</li>
+                            <li>• <strong>生物医药</strong>：溶剂类原料价格跟涨</li>
+                        </ul>
+                        <p><strong>市场预测：</strong>若中东局势持续恶化，油价可能在短期内测试140美元/桶关口。</p>
+                    </div>
+                    <div class="news-detail-source">
+                        <span>📌 来源：彭博社 | 发布时间：2026-03-21 09:48</span>
+                        <button class="btn-link" onclick="event.stopPropagation(); window.open('https://www.bloomberg.com', '_blank')">查看原文</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="news-item" onclick="toggleNews(this)">
+                <div class="news-title">
+                    <span>📈 LME铜价上涨5.9%，PCB行业成本压力增大</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="news-meta">
+                    <span class="news-type">价格指标</span>
+                    <span>📍 伦敦金属交易所</span>
+                    <span>🕐 09:15</span>
+                </div>
+                <div class="news-snippet">电解铜箔成本增加，每张PCB成本预计上涨10元以上，制造商利润承压...</div>
+                <div class="news-detail">
+                    <div class="news-detail-title">📄 详细内容</div>
+                    <div class="news-detail-content">
+                        <p><strong>价格走势：</strong></p>
+                        <ul>
+                            <li>• LME铜：$9,243/吨（↑5.9%）</li>
+                            <li>• 上海期货铜：¥76,850/吨（↑4.8%）</li>
+                            <li>• 电解铜箔：¥195/张（↑8.3%）</li>
+                        </ul>
+                        <p><strong>上涨原因：</strong></p>
+                        <ul>
+                            <li>• 智利、秘鲁铜矿供应受阻</li>
+                            <li>• 新能源汽车需求旺盛</li>
+                            <li>• 美元指数走弱支撑金属价格</li>
+                        </ul>
+                        <p><strong>对PCB行业的影响：</strong></p>
+                        <table style="width:100%; border-collapse: collapse; margin: 10px 0;">
+                            <tr style="background: #edf2f7;">
+                                <th style="padding: 8px; text-align: left; border: 1px solid #e2e8f0;">材料</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #e2e8f0;">涨幅</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #e2e8f0;">影响</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #e2e8f0;">电解铜箔</td>
+                                <td style="padding: 8px; border: 1px solid #e2e8f0;">+8.3%</td>
+                                <td style="padding: 8px; border: 1px solid #e2e8f0;">+15元/张</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #e2e8f0;">覆铜板</td>
+                                <td style="padding: 8px; border: 1px solid #e2e8f0;">+6.2%</td>
+                                <td style="padding: 8px; border: 1px solid #e2e8f0;">+13元/张</td>
+                            </tr>
+                        </table>
+                        <p><strong>行业建议：</strong>PCB制造商应尽快与客户协商价格调整，建议报价单有效期缩短至7天。</p>
+                    </div>
+                    <div class="news-detail-source">
+                        <span>📌 来源：LME | 发布时间：2026-03-21 09:15</span>
+                        <button class="btn-link" onclick="event.stopPropagation(); window.open('https://www.lme.com', '_blank')">查看原文</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="news-item" onclick="toggleNews(this)">
+                <div class="news-title">
+                    <span>🚢 SCFI运费指数飙升，集装箱运价上涨50%</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="news-meta">
+                    <span class="news-type">运费指数</span>
+                    <span>📍 上海航运交易所</span>
+                    <span>🕐 08:30</span>
+                </div>
+                <div class="news-snippet">受红海危机和中东局势双重影响，欧洲航线运价突破$4000/柜...</div>
+                <div class="news-detail">
+                    <div class="news-detail-title">📄 详细内容</div>
+                    <div class="news-detail-content">
+                        <p><strong>运费数据：</strong></p>
+                        <ul>
+                            <li>• SCFI综合指数：2,847点（↑15.2%）</li>
+                            <li>• 欧洲航线：$4,125/FEU（↑52.3%）</li>
+                            <li>• 地中海航线：$3,890/FEU（↑48.7%）</li>
+                            <li>• 中东航线：$2,650/FEU（↑67.8%）</li>
+                        </ul>
+                        <p><strong>上涨原因：</strong></p>
+                        <ul>
+                            <li>• 红海危机持续，船舶被迫绕行好望角</li>
+                            <li>• 霍尔木兹海峡通行风险增加</li>
+                            <li>• 保险费率上调200%-300%</li>
+                            <li>• 航程延长10-15天，运力紧张</li>
+                        </ul>
+                        <p><strong>对跨境电商的影响：</strong></p>
+                        <ul>
+                            <li>• 海运成本占货值比例从8%升至15%</li>
+                            <li>• 交货周期延长2-3周</li>
+                            <li>• 库存周转率下降，资金压力增大</li>
+                        </ul>
+                        <p><strong>应对建议：</strong>建议跨境电商企业优先选择中欧班列等陆运通道，或考虑海外仓备货策略。</p>
+                    </div>
+                    <div class="news-detail-source">
+                        <span>📌 来源：上海航运交易所 | 发布时间：2026-03-21 08:30</span>
+                        <button class="btn-link" onclick="event.stopPropagation(); window.open('https://www.sse.net.cn', '_blank')">查看原文</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="news-item" onclick="toggleNews(this)">
+                <div class="news-title">
+                    <span>💰 钯金价格波动剧烈，电镀行业成本承压</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="news-meta">
+                    <span class="news-type">贵金属</span>
+                    <span>📍 纽约商品交易所</span>
+                    <span>🕐 08:05</span>
+                </div>
+                <div class="news-snippet">钯金现货价格震荡加剧，PCB电镀药水成本不确定性增加...</div>
+                <div class="news-detail">
+                    <div class="news-detail-title">📄 详细内容</div>
+                    <div class="news-detail-content">
+                        <p><strong>价格动态：</strong></p>
+                        <ul>
+                            <li>• 钯金现货：$1,087/盎司（日波动±8.5%）</li>
+                            <li>• 钯金期货：$1,102/盎司（↑6.3%）</li>
+                            <li>• 铂金：$985/盎司（↑3.2%）</li>
+                        </ul>
+                        <p><strong>波动原因：</strong></p>
+                        <ul>
+                            <li>• 俄罗斯钯金供应不确定性（占全球产量40%）</li>
+                            <li>• 汽车催化剂需求波动</li>
+                            <li>• 地缘政治风险溢价</li>
+                            <li>• 投机资金短期炒作</li>
+                        </ul>
+                        <p><strong>对PCB行业的影响：</strong></p>
+                        <ul>
+                            <li>• 金/钯电镀药水成本波动±12%</li>
+                            <li>• 高端PCB生产成本承压</li>
+                            <li>• 电镀工艺调整需求增加</li>
+                        </ul>
+                        <p><strong>替代方案：</strong>建议评估镍金、锡银等替代电镀工艺，降低对钯金的依赖。</p>
+                    </div>
+                    <div class="news-detail-source">
+                        <span>📌 来源：NYMEX | 发布时间：2026-03-21 08:05</span>
+                        <button class="btn-link" onclick="event.stopPropagation(); window.open('https://www.nymex.com', '_blank')">查看原文</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="news-item" onclick="toggleNews(this)">
+                <div class="news-title">
+                    <span>⚡ 沪铝主力上涨3.2%，新型储能成本上升</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="news-meta">
+                    <span class="news-type">有色金属</span>
+                    <span>📍 上海期货交易所</span>
+                    <span>🕐 07:45</span>
+                </div>
+                <div class="news-snippet">铝箔价格上涨，锂电池集流体材料成本增加，储能企业利润受挤压...</div>
+                <div class="news-detail">
+                    <div class="news-detail-title">📄 详细内容</div>
+                    <div class="news-detail-content">
+                        <p><strong>铝价行情：</strong></p>
+                        <ul>
+                            <li>• 沪铝主力：¥19,085/吨（↑3.2%）</li>
+                            <li>• LME铝：$2,342/吨（↑2.8%）</li>
+                            <li>• 铝箔加工费：¥6,500/吨（↑5.1%）</li>
+                        </ul>
+                        <p><strong>上涨原因：</strong></p>
+                        <ul>
+                            <li>• 云南电解铝减产（电力供应紧张）</li>
+                            <li>• 新能源汽车需求旺盛</li>
+                            <li>• 电解铝产能天花板限制</li>
+                            <li>• 碳中和政策下的成本上升</li>
+                        </ul>
+                        <p><strong>对新型储能行业的影响：</strong></p>
+                        <ul>
+                            <li>• 电池铝箔成本上涨5%-8%</li>
+                            <li>• 集流体材料成本承压</li>
+                            <li>• 单kWh储能成本增加约15-20元</li>
+                        </ul>
+                        <p><strong>成本传导：</strong>铝价每上涨1000元/吨，新型储能系统成本增加约0.8%，储能企业需及时调整定价策略。</p>
+                    </div>
+                    <div class="news-detail-source">
+                        <span>📌 来源：SHFE | 发布时间：2026-03-21 07:45</span>
+                        <button class="btn-link" onclick="event.stopPropagation(); window.open('https://www.shfe.com.cn', '_blank')">查看原文</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 行业风险查询</h2>
+            <div class="info-box">
+                <strong>演示版说明</strong><br>
+                这是离线演示版，显示模拟数据。完整版需部署后端服务。
+            </div>
+            <div class="input-group">
+                <label>选择行业</label>
+                <select id="industrySelect">
+                    <option value="">请选择行业</option>
+                    <option value="PCB">PCB - 印刷电路板</option>
+                    <option value="游艇">游艇 - 游艇制造</option>
+                    <option value="生物医药">生物医药 - 生物医药</option>
+                    <option value="新型储能">新型储能 - 新型储能</option>
+                    <option value="打印耗材">打印耗材 - 打印耗材</option>
+                    <option value="跨境电商">跨境电商 - 跨境电商</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>详细需求（可选）</label>
+                <textarea id="queryDetail" placeholder="输入您的具体需求..."></textarea>
+            </div>
+            <button class="btn" onclick="showResult()">开始分析</button>
+        </div>
+
+        <div class="section result-section" id="resultSection">
+            <h2>📊 风险分析报告</h2>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // 新闻展开/收起功能
+        function toggleNews(element) {
+            // 如果点击的是"查看原文"按钮，不触发展开/收起
+            if (event.target.classList.contains('btn-link')) {
+                return;
+            }
+            
+            // 切换展开状态
+            element.classList.toggle('expanded');
+            
+            // 平滑滚动到展开的新闻（可选）
+            if (element.classList.contains('expanded')) {
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
+        }
+
+        const reports = {
+            "PCB": `## 【局势红绿灯】🟡 黄色预警
+
+## 【动态】
+近期伊朗以色列冲突持续升级，霍尔木兹海峡航道通行受限，导致全球原油供应链紧张，直接推高了PCB行业核心原材料的成本。
+
+简单说就是：
+- 国际原油涨价→电解铜箔生产成本上升→每张PCB的铜箔成本涨了10块多
+- 中东航线运费暴涨，每个集装箱额外加收3500美元战争附加费
+
+## 【精细影响】
+- **电解铜箔**：基础价格180元/张，涨幅5.9%，每张成本增加约10.54元
+- **覆铜板(CCL)**：日本巨头已宣布提价30%以上
+- **总成本影响**：预计上涨2.05%
+
+## 【真金白银建议】
+1. ⏳ 3天内锁定近期订单
+2. 🤝 与供应商保持每日沟通
+3. 📋 启动备用供应商评估
+4. 📝 报价单有效期缩短至3-5天
+
+💡 **特别提醒**：关注LME铜价走势，设置价格预警。`,
+
+            "游艇": `## 【局势红绿灯】🟡 黄色预警
+
+## 【动态】
+美国和以色列联合对伊朗发动军事打击，直接导致霍尔木兹海峡封锁，全球原油供应链陷入紧张。
+
+简单给您算笔账：
+- 布伦特原油价格上涨→游艇核心原材料树脂成本大幅上涨
+- 一艘10米游艇大概需要2吨树脂，光原材料成本就多花了2484元
+
+## 【精细影响】
+- **不饱和聚酯树脂**：涨幅5.3%，每吨成本增加约507元
+- **进口发动机**：海运成本上涨15%以上
+- **总成本影响**：预计上涨2.48%
+
+## 【真金白银建议】
+1. ⏳ 3天内锁定近期订单的原材料
+2. 🤝 与树脂供应商签订锁价协议
+3. 🚢 确认进口发动机运输方案
+4. 📝 报价单有效期缩短至3-5天
+
+💡 **特别提醒**：关注布伦特原油价格走势，设置120美元/桶预警线。`,
+
+            "生物医药": `## 【局势红绿灯】🔴 红色警报
+
+## 【动态】
+中东局势高度紧张，以色列港口和卡塔尔航道受严重影响，API原料药和液氦供应链面临中断风险。
+
+简单说就是：
+- 以色列是重要的API原料药供应地，现在供应中断
+- 液氦主要从卡塔尔进口，航道受阻导致运输延误
+- 医药企业面临原材料短缺和成本上涨双重压力
+
+## 【精细影响】
+- **API原料药**：以色列来源断供，需寻找替代供应商
+- **液氦**：运输通道受阻，价格暴涨15%
+- **总成本影响**：预计上涨5.8%
+
+## 【真金白银建议】
+1. ⚠️ 立即启动备用供应商评估
+2. 📋 优先保障核心产品生产
+3. 💰 评估是否需要调整产品价格
+4. 📦 建立多元化供应链体系
+
+💡 **特别提醒**：API原料药供应是关键，建议建立至少3个月的战略储备。`,
+
+            "新型储能": `## 【局势红绿灯】🟡 黄色预警
+
+## 【动态】
+中东局势和全球供应链紧张影响新型储能行业，PVDF粘结剂进口受阻，铝价波动明显。
+
+## 【精细影响】
+- **PVDF粘结剂**：进口依赖度高，供应紧张
+- **铝箔**：沪铝主力价格上涨，成本承压
+- **总成本影响**：预计上涨3.2%
+
+## 【真金白银建议】
+1. 🔍 密切关注PVDF供应情况
+2. 📊 跟踪沪铝价格走势
+3. 📝 与客户协商价格调整机制
+4. 🔋 提前规划产能和库存
+
+💡 **特别提醒**：PVDF供应是关键瓶颈，建议提前锁定货源。`,
+
+            "打印耗材": `## 【局势红绿灯】🟢 绿色提醒
+
+## 【动态】
+中东局势对打印耗材行业影响相对较小，主要是塑料粒子价格有所波动。
+
+## 【精细影响】
+- **ABS/HIPS塑料粒子**：受原油价格上涨影响，成本小幅上涨
+- **聚合碳粉**：供应相对稳定
+- **总成本影响**：预计上涨1.5%
+
+## 【真金白银建议】
+1. ✅ 保持正常采购节奏
+2. 📈 定期关注塑料价格走势
+3. 📦 维持合理库存水平
+
+💡 **特别提醒**：影响相对较小，保持观察即可。`,
+
+            "跨境电商": `## 【局势红绿灯】🔴 红色警报
+
+## 【动态】
+中东局势和红海危机叠加，全球海运通道严重受阻，跨境电商面临物流成本暴涨和配送延误双重挑战。
+
+## 【精细影响】
+- **集装箱运价**：SCFI指数飙升，运价上涨50%-100%
+- **航空燃油附加费**：持续上涨
+- **物流延误**：欧洲航线需绕行好望角，延长2-3周
+- **总成本影响**：预计上涨8-12%
+
+## 【真金白银建议】
+1. ⚠️ 立即调整物流策略
+2. 💰 与客户协商运费分摊
+3. 📦 提前备货，减少紧急发货
+4. 🔄 优化库存管理，平衡成本
+5. 🌍 考虑海外仓布局
+
+💡 **特别提醒**：物流成本是关键，建议密切跟踪SCFI指数。`
+        };
+
+        function showResult() {
+            const industry = document.getElementById('industrySelect').value;
+
+            if (!industry) {
+                alert('请选择要查询的行业');
+                return;
+            }
+
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+
+            resultSection.classList.add('active');
+            resultContent.textContent = reports[industry] || '暂无该行业的分析报告';
+
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
