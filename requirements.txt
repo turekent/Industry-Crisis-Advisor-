@@ -1,0 +1,6 @@
+```txt
+fastapi>=0.109.0
+uvicorn>=0.27.0
+langchain>=0.1.0
+langgraph>=0.0.20
+coze-coding-dev-sdk>=1.0.0
